@@ -89,12 +89,12 @@ function updateCartUI() {
   const mobileCart = document.getElementById('mobile-cart-btn');
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
-  // Desktop Navbar CTA — opens modal instead of going directly to WA
+  // Desktop Navbar CTA — opens modal
   if (cta) {
     if (cart.length > 0) {
       cta.textContent = `Pedir (${cart.length}) - $${total.toLocaleString('es-CL')}`;
       cta.href = '#';
-      cta.onclick = (e) => { e.preventDefault(); openOrderModal(); };
+      cta.onclick = (e) => { e.preventDefault(); window.openOrderModal && window.openOrderModal(); };
     } else {
       cta.textContent = 'Pedir Ahora';
       cta.href = '#';
@@ -102,19 +102,19 @@ function updateCartUI() {
     }
   }
 
-  // Mobile Floating Cart — opens modal
+  // Mobile Floating Cart (now a <button>) — show/hide and open modal
   if (mobileCart) {
     if (cart.length > 0) {
+      mobileCart.style.display = '';
       mobileCart.classList.add('active');
-      mobileCart.href = '#';
-      mobileCart.onclick = (e) => { e.preventDefault(); openOrderModal(); };
+      mobileCart.onclick = () => { window.openOrderModal && window.openOrderModal(); };
       const countEl = mobileCart.querySelector('.mcf-count');
       const totalEl = mobileCart.querySelector('.mcf-total');
       if (countEl) countEl.textContent = cart.length;
       if (totalEl) totalEl.textContent = `$${total.toLocaleString('es-CL')}`;
     } else {
       mobileCart.classList.remove('active');
-      mobileCart.href = '#';
+      mobileCart.style.display = 'none';
       mobileCart.onclick = null;
     }
   }
@@ -129,6 +129,7 @@ function updateCartUI() {
     else ctrl.classList.remove('active');
   });
 }
+
 
 function generateWhatsAppLink(orderData = {}) {
   if (cart.length === 0) return '#';
