@@ -314,6 +314,14 @@
                 }
             }, 2000);
         }
+
+        // Auto-track if ?track= param is present in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const trackParam = urlParams.get('track');
+        if (trackParam) {
+            document.getElementById('order-id-input').value = trackParam.toUpperCase();
+            trackOrder();
+        }
     </script>
 </body>
 </html>

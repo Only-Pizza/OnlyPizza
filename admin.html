@@ -1066,7 +1066,8 @@
                             async () => {
                                 const settings = await Store.getSettings();
                                 const storeName = (settings.store && settings.store.name) || "Only Pizza";
-                                const text = encodeURIComponent(`🍕 *¡Hola ${orderData.customer}!* Tu pedido *${savedOrder.orderNumber}* en *${storeName}* ha sido registrado.\n\n📍 *Tipo:* ${orderData.type}\n💰 *Total:* $${orderData.total.toLocaleString()}\n\n🔗 *Sigue tu pedido aquí:* ${window.location.origin}/index.html?track=${savedOrder.orderNumber}`);
+                                const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${savedOrder.orderNumber}`;
+                                const text = encodeURIComponent(`*\u00a1Hola ${orderData.customer}!* Tu pedido *${savedOrder.orderNumber}* en *${storeName}* ha sido registrado.\n\n*Tipo:* ${orderData.type}\n*Total:* $${orderData.total.toLocaleString()} CLP\n\n*Sigue tu pedido aqui:*\n${trackingUrl}`);
                                 window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
                             },
                             "ENVIAR WHATSAPP"
