@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Only Pizza — Pizza del Futuro</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/png" href="https://i.ibb.co/bn1n6yp/Pizza-removebg-preview.png">
+</head>
+<body>
+
+<!-- Background Decorations -->
+<img src="Pizza_800x800.png" class="floating-pizza fp-left" alt="">
+<img src="Pizza_peperoni_800x800.png" class="floating-pizza fp-right" alt="">
+
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">
+    <img src="https://i.ibb.co/RpdWLQh9/Gemini-Generated-Image-mr53vomr53vomr53-removebg-preview.png" alt="Only Pizza Logo">
+  </a>
+  <ul class="nav-links">
+    <li><a href="#menu">Menú</a></li>
+    <li><a href="#offers">Ofertas</a></li>
+    <li><a href="#how">¿Cómo pedir?</a></li>
+    <li><a href="#whatsapp">WhatsApp</a></li>
+    <li><a href="tracking.html" style="color:var(--it-green)">Rastrear Pedido</a></li>
+    <li><a href="#" class="nav-cta">Pedir Ahora</a></li>
+  </ul>
+  <div class="nav-mobile-btn" id="mobile-toggle">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobile-menu">
+  <div class="mobile-menu-header">
+    <img src="https://i.ibb.co/RpdWLQh9/Gemini-Generated-Image-mr53vomr53vomr53-removebg-preview.png" alt="Only Pizza Logo" style="height:50px">
+  </div>
+  <ul class="mobile-nav-links">
+    <li><a href="#menu">Menú</a></li>
+    <li><a href="#offers">Ofertas</a></li>
+    <li><a href="#how">¿Cómo pedir?</a></li>
+    <li><a href="#whatsapp">WhatsApp</a></li>
+    <li><a href="tracking.html" style="color:var(--it-green)">Rastrear Pedido</a></li>
+  </ul>
+  <div class="mobile-menu-footer">
+    <a href="#" class="btn-primary mobile-cta">Pedir Ahora</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="hero-content">
+    <div class="hero-tag">Reparto y Retiro — Nueva Imperial</div>
+    <h1 class="hero-h1">
+      <span class="it-on">On</span><span class="it-lypi">lyPi</span><span class="it-zza">zza</span>
+    </h1>
+    <p class="hero-desc">Masa artesanal, ingredientes premium, entregada en tiempo récord. La experiencia de una pizzería italiana con la velocidad de la tecnología.</p>
+    <div class="hero-actions">
+      <a href="#menu" class="btn-primary">Ver Menú</a>
+      <a href="#offers" class="btn-secondary">Ofertas Activas</a>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="pizza-ring"></div>
+    <div class="pizza-ring"></div>
+    <div class="pizza-ring"></div>
+    <div class="pizza-container">
+      <img src="Pizza_peperoni_800x800.png" class="pizza-hero-img" alt="Only Pizza Real">
+    </div>
+    <div class="data-tag tag-1">TEMP: 485°C</div>
+    <div class="data-tag tag-2">MASA: ARTESANAL</div>
+    <div class="data-tag tag-3">TIEMPO: ~25min</div>
+  </div>
+</section>
+
+
+<!-- MENU -->
+<section id="menu">
+  <div class="menu-header">
+    <div>
+      <div class="section-tag">Menú</div>
+      <h2 class="section-h2">NUESTRAS<br>PIZZAS</h2>
+    </div>
+    <div class="menu-filter">
+      <button class="filter-btn active">Todas</button>
+      <button class="filter-btn">Clásicas</button>
+      <button class="filter-btn">Especiales</button>
+      <button class="filter-btn">Veggie</button>
+    </div>
+  </div>
+
+  <div class="pizza-grid">
+    <!-- Pizzas rendered dynamically via JS -->
+  </div>
+</section>
+
+<!-- OFFERS -->
+<section id="offers">
+  <div class="section-tag">Promociones activas</div>
+  <h2 class="section-h2">OFERTAS<br>DE LA SEMANA</h2>
+
+  <div class="offers-grid" id="offers-dynamic-grid">
+    <!-- Offers rendered dynamically via JS -->
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-tag">Proceso</div>
+  <h2 class="section-h2">¿CÓMO<br>PEDIR?</h2>
+
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Elige tu pizza</div>
+      <div class="step-desc">Explora nuestro menú y arma tu pedido con las pizzas que más te gusten. Puedes hacerlo desde la web o WhatsApp.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">Confirma el pedido</div>
+      <div class="step-desc">Ingresa tus datos de entrega o indícanos si pasas a retirar. Nuestro sistema procesa tu pedido al instante.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">Preparamos</div>
+      <div class="step-desc">Masa fresca, ingredientes premium. Nuestro horno a leña trabaja a 485°C para lograr la corteza perfecta.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-title">¡A comer!</div>
+      <div class="step-desc">Delivery en menos de 30 min o retira en local. Recibirás actualizaciones en tiempo real del estado de tu pedido.</div>
+    </div>
+  </div>
+</section>
+
+<!-- WHATSAPP -->
+<section id="whatsapp">
+  <div>
+    <div class="section-tag">También por</div>
+    <h2 class="wa-title">PIDE POR <span>WHATSAPP</span></h2>
+    <p class="wa-desc">¿Prefieres escribir directamente? Nuestro asistente virtual recibe tu pedido, lo confirma y lo agrega automáticamente a la cola de preparación.</p>
+    <ul class="wa-steps">
+      <li><span>→</span><span>Escríbenos al número de WhatsApp Business con tu pedido.</span></li>
+      <li><span>→</span><span>El bot te guiará por el menú y confirmará tu orden.</span></li>
+      <li><span>→</span><span>Tu pedido entra directo al panel de la cocina.</span></li>
+      <li><span>→</span><span>Recibirás actualizaciones del estado por el mismo chat.</span></li>
+    </ul>
+    <br>
+    <a href="https://wa.me/56943892208" class="btn-primary" style="display:inline-block; margin-top:1rem">
+      Abrir WhatsApp →
+    </a>
+  </div>
+  <div class="wa-visual">
+    <div class="wa-glow"></div>
+    <div class="phone-mockup">
+      <div class="phone-notch"></div>
+      <div style="font-family:var(--font-mono);font-size:0.6rem;color:#25D366;margin-bottom:0.8rem;letter-spacing:0.1em">ONLY PIZZA · WhatsApp</div>
+      <div class="chat-bubble">
+        Hola! Quiero pedir una pizza Pepperoni grande 🍕
+        <div class="chat-time">20:14</div>
+      </div>
+      <div class="chat-bubble" style="background:#0d2b1a">
+        ¡Hola! 🍕 Perfecto. ¿Es para delivery o retiro?
+        <div class="chat-time">20:14</div>
+      </div>
+      <div class="chat-bubble">
+        Delivery. Calle Los Aromos 543
+        <div class="chat-time">20:15</div>
+      </div>
+      <div class="chat-bubble" style="background:#0d2b1a">
+        ✅ Pedido confirmado.<br>Pepperoni Grande — $8.990<br>Tiempo estimado: 25 min
+        <div class="chat-time">20:15</div>
+      </div>
+      <div class="chat-bubble" style="background:#0d2b1a; margin-top:0.5rem; border-left:2px solid #25D366">
+        🔥 Tu pizza está en el horno...
+        <div class="chat-time">20:28</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <img src="https://i.ibb.co/RpdWLQh9/Gemini-Generated-Image-mr53vomr53vomr53-removebg-preview.png" alt="Only Pizza" style="height:60px;filter:drop-shadow(0 0 12px rgba(255,69,0,0.6))">
+  </div>
+  <div class="footer-info">
+    Nueva Imperial, Araucanía<br>
+    REPARTO Y RETIRO<br>
+    12:00 — 23:00 HRS
+  </div>
+  <!-- MOBILE FLOATING CART -->
+  <a href="#" class="mobile-cart-float" id="mobile-cart-btn">
+    <div class="mcf-content">
+      <span class="mcf-count">0</span>
+      <span class="mcf-label">VER CARRITO</span>
+      <span class="mcf-total">$0</span>
+    </div>
+  </a>
+
+  <script type="module" src="data-manager.js"></script>
+<script type="module" src="scripts.js"></script>
+</body>
+</html>

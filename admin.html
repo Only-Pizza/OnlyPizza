@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Only Pizza — Panel de Administración</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="https://i.ibb.co/bn1n6yp/Pizza-removebg-preview.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --sidebar-w: 260px;
+            --accent-glow: rgba(0, 140, 69, 0.3);
+        }
+        
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #000 !important;
+        }
+
+        body {
+            display: flex;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Scanline Overlay */
+        body::after {
+            content: ''; position: fixed; inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none; z-index: 9999;
+        }
+
+        #sidebar {
+            width: var(--sidebar-w);
+            background: #050505;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 0;
+            position: relative;
+        }
+
+        .sidebar-logo {
+            padding: 0 2rem 2rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+        .sidebar-logo span { color: var(--it-green); font-family: var(--font-display); font-size: 1.8rem; }
+        
+        .admin-nav { list-style: none; flex: 1; }
+        .admin-nav li a {
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            color: var(--muted);
+            text-decoration: none;
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            letter-spacing: 0.1em;
+            transition: 0.3s;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+        .admin-nav li a:hover, .admin-nav li a.active {
+            background: rgba(0,140,69,0.05);
+            color: var(--it-green);
+            border-left-color: var(--it-green);
+        }
+
+        .admin-main {
+            flex: 1;
+            margin-left: var(--sidebar-w);
+            padding: 3rem;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        .admin-view {
+            display: none;
+            animation: fadeUp 0.5s forwards;
+        }
+        .admin-view.active {
+            display: block;
+        }
+
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+        .top-header h1 { font-family: var(--font-display); font-size: 3.5rem; letter-spacing: 2px; }
+        .user-profile {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 0.6rem 1.2rem;
+            display: flex; align-items: center; gap: 1rem;
+            font-family: var(--font-mono); font-size: 0.7rem;
+        }
+        .status-pulse { width: 8px; height: 8px; background: var(--it-green); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,140,69,0.7); } 70% { box-shadow: 0 0 0 10px rgba(0,140,69,0); } 100% { box-shadow: 0 0 0 0 rgba(0,140,69,0); } }
+
+        @media (max-width: 600px) {
+            .header-actions {
+                flex-direction: column;
+                align-items: stretch !important;
+                width: 100%;
+            }
+            .user-profile { justify-content: center; }
+        }
+
+        /* Stats cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        .stat-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: ''; position: absolute; top:0; left:0; width:2px; height:100%; background: var(--it-green);
+        }
+        .stat-icon { font-size: 2.2rem; color: var(--it-green); opacity: 0.8; }
+        .stat-content { flex: 1; }
+        .stat-value { font-family: var(--font-display); font-size: 2.8rem; line-height: 1; }
+        .stat-label { font-family: var(--font-mono); font-size: 0.85rem; color: var(--muted); text-transform: uppercase; margin-top: 0.5rem; letter-spacing: 1px; }
+
+        .dashboard-sections {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+        }
+
+        .admin-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .admin-card h3 { 
+            font-family: var(--font-display); 
+            font-size: 1.8rem; 
+            margin-bottom: 2rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem;
+        }
+        .admin-card h3 i { font-size: 1rem; color: var(--it-green); }
+
+        /* Order List Styles */
+        #order-history { display: flex; flex-direction: column; gap: 1rem; }
+        .order-row {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            transition: 0.3s;
+            position: relative;
+        }
+        .order-row:hover { border-color: var(--it-green); background: rgba(0,140,69,0.02); }
+        .order-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            gap: 1rem;
+        }
+        .order-meta { font-family: var(--font-mono); font-size: 0.9rem; flex: 1; }
+        .order-customer { font-weight: 700; color: #fff; display: block; margin-top: 0.5rem; font-size: 1.1rem; }
+        
+        .status-badge {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            padding: 0.3rem 0.8rem;
+            border: 1px solid currentColor;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .status-Recibido { color: #fff; border-color: #fff; }
+        .status-Preparación { color: #3498db; border-color: #3498db; }
+        .status-Al_Horno { color: #f1c40f; border-color: #f1c40f; }
+        .status-Listo { color: var(--it-green); border-color: var(--it-green); box-shadow: inset 0 0 10px rgba(0,140,69,0.2); }
+        .status-En_Despacho { color: #9b59b6; border-color: #9b59b6; }
+
+        .status-buttons { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); 
+            gap: 0.4rem; 
+            width: 100%;
+        }
+        .status-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 0.5rem 0.3rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .status-btn:hover { border-color: var(--it-white); color: #fff; }
+        .status-btn.active { background: var(--it-green); border-color: var(--it-green); color: #fff; }
+        .status-btn.btn-ready:hover { border-color: var(--it-green); color: var(--it-green); }
+        .status-btn.btn-ready.active { background: var(--it-green); border-color: var(--it-green); color: #fff; }
+        .status-btn i { font-size: 0.7rem; margin-right: 2px; }
+
+        /* Forms */
+        .admin-form { display: grid; gap: 1rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: stretch; }
+        .field-group { display: flex; flex-direction: column; }
+        .field-group label { 
+            display: block; 
+            font-family: var(--font-mono); 
+            font-size: 0.8rem; 
+            color: var(--muted); 
+            margin-bottom: 0.5rem; 
+            text-transform: uppercase;
+            min-height: 2.2rem; /* Ensure labels with wrapping stay aligned */
+            display: flex;
+            align-items: flex-end;
+        }
+        .field-group input, .field-group select, .field-group textarea {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 0.8rem;
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            margin-top: auto; /* Push to bottom if label is short */
+        }
+        .field-group input:focus, .field-group textarea:focus { border-color: var(--it-green); outline: none; }
+
+        /* Image Upload */
+        .image-upload-wrapper {
+            border: 1px dashed var(--border);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .image-upload-wrapper:hover { border-color: var(--it-green); background: rgba(0,140,69,0.05); }
+        .image-upload-wrapper input {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
+        }
+        .image-preview {
+            width: 100%; height: 200px;
+            object-fit: contain;
+            display: none;
+            margin-bottom: 1rem;
+        }
+        .upload-placeholder { color: var(--muted); font-family: var(--font-mono); font-size: 0.8rem; }
+
+        /* Menu List in Content Tab */
+        .admin-menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        .admin-menu-item {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex; gap: 1rem;
+            align-items: center;
+        }
+        .admin-menu-img { width: 60px; height: 60px; object-fit: contain; border: 1px solid var(--border); }
+        .admin-menu-info { flex: 1; font-family: var(--font-mono); font-size: 0.8rem; }
+        .delete-btn { color: var(--it-red); background: transparent; border: none; cursor: pointer; font-size: 1.1rem; }
+
+        /* Grid Layouts */
+        .grid-2-1 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; }
+        .grid-1-1 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .grid-1-1-5 { display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; }
+        .span-2 { grid-column: span 2; }
+
+        /* Offers/Marketing Specific Styles */
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #333; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--it-green); }
+        input:focus + .slider { box-shadow: 0 0 1px var(--it-green); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .offers-admin-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+        .offer-edit-card { background: var(--panel); border: 1px solid var(--border); padding: 1.5rem; position: relative; }
+        .offer-edit-card h4 { font-family: var(--font-mono); margin-bottom: 1.5rem; color: var(--it-green); font-size: 0.9rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+
+        .mobile-toggle { display: none; }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 900px) {
+            html, body { 
+                overflow-x: hidden;
+                width: 100%;
+                position: relative;
+                margin: 0; padding: 0;
+            }
+            body { display: block; overflow-y: auto; background: #000 !important; }
+            body::after { display: none; } /* Remove scanlines to avoid glitches */
+            
+            #sidebar {
+                position: fixed; 
+                left: -280px; top: 0; bottom: 0; 
+                z-index: 2000; width: 280px;
+                transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+                margin: 0; border: none;
+            }
+            #sidebar.open { left: 0; }
+            
+            .admin-main { 
+                margin: 0 !important;
+                padding: 1rem; 
+                max-width: 100vw; 
+                overflow-x: hidden;
+                padding-top: 5rem;
+                height: auto;
+            }
+
+            .top-header { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 1.5rem; 
+                margin-bottom: 2rem;
+            }
+            .top-header h1 { font-size: 2rem; line-height: 1.2; }
+            .header-actions {
+                width: 100%;
+                flex-direction: column-reverse;
+                align-items: stretch !important;
+                gap: 1rem;
+            }
+            
+            .stats-grid { grid-template-columns: 1fr; gap: 1rem; }
+            .stat-card { padding: 1.5rem; }
+            .stat-value { font-size: 2.2rem; }
+
+            .dashboard-sections, .grid-2-1, .grid-1-1, .grid-1-1-5 { 
+                grid-template-columns: 1fr !important; 
+                gap: 1.5rem; 
+            }
+            .span-2 { grid-column: span 1 !important; }
+            
+            .order-header { flex-direction: column; gap: 0.5rem; }
+            .status-badge { align-self: flex-start; }
+            .status-buttons { grid-template-columns: repeat(2, 1fr); }
+            
+            .admin-nav li a { padding: 1.2rem 2rem; font-size: 1.1rem; }
+
+            .mobile-toggle {
+                display: flex !important;
+                align-items: center; justify-content: center;
+                position: fixed; 
+                top: 15px; left: 15px; /* Moved to LEFT to avoid clashing with header buttons */
+                width: 45px; height: 45px; border-radius: 6px;
+                background: var(--it-green); color: #fff;
+                z-index: 2500; border: none;
+                font-size: 1.2rem;
+                box-shadow: 0 4px 15px rgba(0,140,69,0.5);
+            }
+
+            /* Marketing/Offers Fixed */
+            .offers-admin-grid { grid-template-columns: 1fr !important; gap: 1.5rem; }
+            .offer-edit-card { padding: 1.5rem; }
+            #save-offers-btn { width: 100%; }
+            
+            .offers-header-mobile {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center;
+                gap: 1.5rem;
+            }
+        }
+
+        /* Login Simulation */
+        #login-overlay {
+            position: fixed; inset: 0; background: #000; z-index: 3000;
+            display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .login-box {
+            background: var(--panel); border: 1px solid var(--border);
+            padding: 3rem; width: 400px; text-align: center;
+        }
+        .login-box h2 { font-family: var(--font-display); font-size: 3rem; color: var(--it-green); margin-bottom: 2rem; }
+        .login-btn { 
+            width: 100%; padding: 1rem; background: var(--it-green); 
+            border: none; color: #fff; font-family: var(--font-display); 
+            font-size: 1.5rem; cursor: pointer; margin-top: 1rem;
+        }
+
+        /* Edit Pizza Modal */
+        #edit-pizza-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px); z-index: 5100;
+            display: none; align-items: center; justify-content: center;
+            padding: 2rem; animation: fadeIn 0.3s forwards;
+            overflow-y: auto;
+        }
+        #edit-pizza-modal .modal-box {
+            width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: left;
+        }
+        #edit-pizza-modal .modal-title {
+            text-align: center;
+        }
+        #edit-pizza-modal .field-group label {
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .admin-menu-item {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .admin-menu-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--it-green);
+        }
+        .admin-menu-info {
+            pointer-events: none;
+        }
+        .admin-menu-img {
+            pointer-events: none;
+        }
+        /* Custom Confirmation Modal */
+        #custom-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px); z-index: 5000;
+            display: none; align-items: center; justify-content: center;
+            padding: 2rem; animation: fadeIn 0.3s forwards;
+        }
+        .modal-box {
+            background: #0a0a0a; border: 1px solid var(--it-green);
+            padding: 2.5rem; width: 450px; max-width: 100%;
+            text-align: center; box-shadow: 0 20px 50px rgba(0,140,69,0.2);
+            position: relative; overflow: hidden;
+            animation: modalScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .modal-box::before { content: ''; position: absolute; top:0; left:0; width:100%; height:2px; background: var(--it-green); }
+        .modal-title { font-family: var(--font-display); font-size: 2.5rem; color: var(--it-green); margin-bottom: 1rem; letter-spacing: 1px; }
+        .modal-desc { font-family: var(--font-mono); font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin-bottom: 2.5rem; }
+        .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .modal-btn {
+            padding: 1rem; font-family: var(--font-display); font-size: 1.2rem;
+            border: 1px solid var(--border); cursor: pointer; transition: 0.3s;
+        }
+        .modal-btn.cancel { background: transparent; color: var(--muted); }
+        .modal-btn.cancel:hover { background: rgba(255,255,255,0.05); color: #fff; border-color: #fff; }
+        .modal-btn.confirm { background: var(--it-green); border-color: var(--it-green); color: #fff; }
+        .modal-btn.confirm:hover { background: #00a050; box-shadow: 0 0 20px rgba(0,140,69,0.4); }
+
+        @keyframes modalScale {
+            from { transform: scale(0.8) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media (max-width: 600px) {
+            .modal-box { padding: 2rem; }
+            .modal-title { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body class="admin-body">
+
+    <!-- LOGIN OVERLAY -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>ACCESO ADMINISTRADOR</h2>
+            <div class="admin-form">
+                <div class="field-group">
+                    <label>Usuario</label>
+                    <input type="text" id="login-user" value="admin">
+                </div>
+                <div class="field-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="login-pass" value="pizza2026">
+                </div>
+                <button class="login-btn" onclick="handleLogin()">ENTRAR AL SISTEMA</button>
+                <p id="login-error" style="color:var(--it-red); margin-top:1rem; display:none; font-family:var(--font-mono); font-size:0.8rem;">ACCESO DENEGADO</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+    <aside id="sidebar">
+        <div class="sidebar-logo">
+            <span>ONLY</span>PIZZA
+        </div>
+        <ul class="admin-nav">
+            <li><a onclick="switchTab('dashboard')" id="nav-dashboard" class="active"><i class="fas fa-th-large"></i> PANEL</a></li>
+            <li><a onclick="switchTab('content')" id="nav-content"><i class="fas fa-pizza-slice"></i> CONTENIDO</a></li>
+            <li><a onclick="switchTab('reports')" id="nav-reports"><i class="fas fa-chart-line"></i> REPORTES</a></li>
+            <li><a onclick="switchTab('system')" id="nav-system"><i class="fas fa-cog"></i> SISTEMA</a></li>
+            <li style="margin-top: auto;"><a href="pizza-landing.html"><i class="fas fa-external-link-alt"></i> VER SITIO</a></li>
+        </ul>
+    </aside>
+
+    <main class="admin-main">
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="admin-view active">
+            <header class="top-header">
+                <div>
+                    <div class="section-tag" style="margin:0">Admin Control</div>
+                    <h1>PANEL DE CONTROL</h1>
+                </div>
+                <div class="header-actions" style="display: flex; align-items: center; gap: 1.5rem;">
+                    <button class="admin-btn" id="btn-close-day" style="margin:0; padding: 0.6rem 1.2rem; font-size: 1rem; background: var(--it-red);">
+                        <i class="fas fa-file-invoice-dollar"></i> FINALIZAR DÍA DE VENTAS
+                    </button>
+                    <div class="user-profile">
+                        <div class="status-pulse"></div>
+                        ACCESO_SISTEMA: ACTIVO
+                    </div>
+                </div>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="count-pending">0</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color:var(--it-red)"><i class="fas fa-fire"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="count-oven">0</div>
+                        <div class="stat-label">En Horno</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color:var(--it-white)"><i class="fas fa-truck-fast"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="count-today">0</div>
+                        <div class="stat-label">Total Hoy</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-sections grid-2-1">
+                <section class="admin-card">
+                    <h3><i class="fas fa-list"></i> PEDIDOS RECIENTES</h3>
+                    <div id="order-history"></div>
+                </section>
+
+                <section class="admin-card">
+                    <h3><i class="fas fa-plus"></i> NUEVO PEDIDO</h3>
+                    <form class="admin-form" id="order-form">
+                        <div class="field-group">
+                            <label>Nombre del Cliente</label>
+                            <input type="text" id="customer-name" required placeholder="EJ: JUAN PEREZ">
+                        </div>
+                        <div class="form-row">
+                            <div class="field-group">
+                                <label>Tipo de Entrega</label>
+                                <select id="order-type">
+                                    <option value="Despacho">Despacho</option>
+                                    <option value="Retiro">Retiro</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label>Medio de Pago</label>
+                                <select id="order-payment">
+                                    <option value="Transferencia">Transferencia</option>
+                                    <option value="Débito/Crédito">Débito/Crédito</option>
+                                    <option value="Efectivo">Efectivo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="field-group" id="address-group">
+                                <label>Dirección (Sólo Despacho)</label>
+                                <input type="text" id="customer-address" placeholder="EJ: AV. SIEMPRE VIVA 742">
+                            </div>
+                            <div class="field-group">
+                                <label>WhatsApp Cliente (Opcional)</label>
+                                <input type="text" id="customer-whatsapp" value="+56" placeholder="EJ: +56912345678">
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label>Detalle del Pedido</label>
+                            <textarea id="order-details" required placeholder="EJ: 2X PEPPERONI, 1X MARGHERITA"></textarea>
+                        </div>
+                        <div class="field-group">
+                            <label>Total (CLP)</label>
+                            <input type="text" id="order-total" required placeholder="EJ: 25.000" oninput="formatCLPInput(this)">
+                        </div>
+                        <button type="submit" class="admin-btn">REGISTRAR EN SISTEMA</button>
+                    </form>
+                </section>
+            </div>
+        </div>
+
+        <!-- CONTENT VIEW -->
+        <div id="view-content" class="admin-view">
+            <header class="top-header">
+                <div>
+                    <div class="section-tag" style="margin:0">Gestión de Productos</div>
+                    <h1>EDITOR DE MENÚ</h1>
+                </div>
+            </header>
+
+            <div class="dashboard-sections grid-1-1-5">
+                <!-- Add Pizza Form -->
+                <section class="admin-card">
+                    <h3><i class="fas fa-plus-circle"></i> AGREGAR PRODUCTO</h3>
+                    <form class="admin-form" id="pizza-form">
+                        <div class="field-group">
+                            <label>Nombre Pizza</label>
+                            <input type="text" id="pizza-name" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Ingredientes (separados por coma)</label>
+                            <textarea id="pizza-ingredients" required style="height: 80px;"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="field-group">
+                                <label>Precio (CLP)</label>
+                                <input type="text" id="pizza-price" required placeholder="EJ: 12.000" oninput="formatCLPInput(this)">
+                            </div>
+                            <div class="field-group">
+                                <label>Categoría</label>
+                                <select id="pizza-category">
+                                    <option>Clásicas</option>
+                                    <option>Especiales</option>
+                                    <option>Veggie</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label>Foto de la Pizza</label>
+                            <div class="image-upload-wrapper">
+                                <img src="" id="photo-preview" class="image-preview">
+                                <div id="upload-label" class="upload-placeholder">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size:2rem; display:block; margin-bottom: 0.5rem;"></i>
+                                    CLICK PARA SUBIR FOTO
+                                </div>
+                                <input type="file" id="pizza-photo" accept="image/*">
+                            </div>
+                        </div>
+                        <button type="submit" class="admin-btn">GUARDAR EN EL MENÚ</button>
+                    </form>
+                </section>
+
+                <!-- Menu List -->
+                <section class="admin-card">
+                    <h3><i class="fas fa-book-open"></i> MENÚ ACTUAL</h3>
+                    <div id="admin-menu-grid" class="admin-menu-grid"></div>
+                </section>
+            </div>
+
+            <!-- Offers Management -->
+            <div class="top-header offers-header-mobile" style="margin-top: 4rem;">
+                <div>
+                    <div class="section-tag" style="margin:0">// Marketing</div>
+                    <h1>OFERTAS DE LA SEMANA</h1>
+                </div>
+                <div class="toggle-container">
+                    <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted);">MOSTRAR SECCIÓN:</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-offers" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="offers-admin-grid" id="offers-admin-grid">
+                <!-- Offer cards will be rendered here -->
+            </div>
+
+            <div style="margin-top: 2rem; text-align: right;">
+                <button type="button" class="admin-btn" id="save-offers-btn" style="width: auto; padding: 1rem 3rem;">
+                    GUARDAR CAMBIOS EN OFERTAS
+                </button>
+            </div>
+        </div>
+
+        <!-- REPORTS VIEW -->
+        <div id="view-reports" class="admin-view">
+            <header class="top-header">
+                <div>
+                    <div class="section-tag" style="margin:0">Análisis de Datos</div>
+                    <h1>REPORTES Y ESTADÍSTICAS</h1>
+                </div>
+            </header>
+            
+            <div class="dashboard-sections grid-1-1">
+                <section class="admin-card span-2">
+                    <h3><i class="fas fa-chart-line"></i> RENDIMIENTO MENSUAL (VENTAS CLP)</h3>
+                    <div style="height: 300px; min-height: 250px; position: relative;">
+                        <canvas id="chart-monthly-sales"></canvas>
+                    </div>
+                </section>
+
+                <section class="admin-card">
+                    <h3><i class="fas fa-history"></i> ÚLTIMOS CIERRES DIARIOS</h3>
+                    <div id="daily-history-list" style="display: flex; flex-direction: column; gap: 1rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </section>
+                
+                <section class="admin-card">
+                    <h3><i class="fas fa-chart-pie"></i> PRODUCTOS MÁS VENDIDOS</h3>
+                    <div style="height: 300px; min-height: 250px; position: relative;">
+                        <canvas id="chart-product-ranking"></canvas>
+                    </div>
+                </section>
+                
+                <section class="admin-card">
+                    <h3><i class="fas fa-chart-bar"></i> ESTADÍSTICAS GENERALES</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="total-revenue-historic">$0</div>
+                                <div class="stat-label">Ventas Totales Históricas</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="total-days-closed">0</div>
+                                <div class="stat-label">Días con Cierre de Venta</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                        <h4 style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); margin-bottom: 1rem;">DESGLOSE POR MES</h4>
+                        <div id="monthly-summary-table" style="font-family: var(--font-mono); font-size: 0.8rem;">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- SYSTEM VIEW -->
+        <div id="view-system" class="admin-view">
+            <header class="top-header">
+                <div>
+                    <div class="section-tag" style="margin:0">Configuración Central</div>
+                    <h1>AJUSTES DEL SISTEMA</h1>
+                </div>
+            </header>
+
+            <div class="dashboard-sections">
+                <section class="admin-card">
+                    <h3><i class="fas fa-store"></i> DATOS DEL LOCAL</h3>
+                    <div class="admin-form" id="form-settings-store">
+                        <div class="field-group">
+                            <label>Nombre del Local</label>
+                            <input type="text" id="set-store-name" placeholder="EJ: ONLY PIZZA">
+                        </div>
+                        <div class="field-group">
+                            <label>WhatsApp de Pedidos (Oficial)</label>
+                            <input type="text" id="set-store-whatsapp" placeholder="EJ: +56 9 1234 5678">
+                        </div>
+                        <div class="field-group">
+                            <label>Dirección</label>
+                            <input type="text" id="set-store-address" placeholder="EJ: AV. CENTRAL #123">
+                        </div>
+                        <button class="admin-btn" id="btn-save-store">GUARDAR DATOS DEL LOCAL</button>
+                    </div>
+                </section>
+
+                <section class="admin-card">
+                    <h3><i class="fas fa-user-shield"></i> ACCESO</h3>
+                    <div class="admin-form">
+                        <div class="field-group">
+                            <label>Cambiar Contraseña Admin</label>
+                            <input type="password" id="set-admin-pass" placeholder="NUEVA CONTRASEÑA">
+                        </div>
+                        <button class="admin-btn" id="btn-save-pass">ACTUALIZAR CREDENCIALES</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- NOTIFICATION SYSTEM -->
+    <div id="notyf-container"></div>
+
+    <!-- CUSTOM CONFIRMATION MODAL -->
+    <div id="custom-modal">
+        <div class="modal-box">
+            <div class="modal-title">¿ESTÁS SEGURO?</div>
+            <div class="modal-desc" id="modal-desc">Esta acción no se puede deshacer.</div>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" id="modal-cancel">CANCELAR</button>
+                <button class="modal-btn confirm" id="modal-confirm">ELIMINAR PRODUCTO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT PIZZA MODAL -->
+    <div id="edit-pizza-modal">
+        <div class="modal-box">
+            <div class="modal-title">EDITAR PIZZA</div>
+            <form class="admin-form" id="edit-pizza-form">
+                <input type="hidden" id="edit-pizza-id">
+                <div class="field-group">
+                    <label>Nombre Pizza</label>
+                    <input type="text" id="edit-pizza-name" required>
+                </div>
+                <div class="field-group">
+                    <label>Ingredientes (separados por coma)</label>
+                    <textarea id="edit-pizza-ingredients" required style="height: 80px;"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="field-group">
+                        <label>Precio (CLP)</label>
+                        <input type="text" id="edit-pizza-price" required oninput="formatCLPInput(this)">
+                    </div>
+                    <div class="field-group">
+                        <label>Categoría</label>
+                        <select id="edit-pizza-category">
+                            <option>Clásicas</option>
+                            <option>Especiales</option>
+                            <option>Veggie</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label>Cambiar Foto (Opcional)</label>
+                    <div class="image-upload-wrapper">
+                        <img src="" id="edit-photo-preview" class="image-preview">
+                        <div id="edit-upload-label" class="upload-placeholder">
+                            <i class="fas fa-edit" style="font-size:2rem; display:block; margin-bottom: 0.5rem;"></i>
+                            CAMBIAR IMAGEN
+                        </div>
+                        <input type="file" id="edit-pizza-photo" accept="image/*">
+                    </div>
+                </div>
+                <div class="modal-actions" style="margin-top: 2rem;">
+                    <button type="button" class="modal-btn cancel" onclick="closeEditModal()">CANCELAR</button>
+                    <button type="submit" class="modal-btn confirm">GUARDAR CAMBIOS</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="data-manager.js"></script>
+    <script type="module">
+        import { Store } from './data-manager.js';
+
+        const statuses = ['Recibido', 'Preparación', 'Al Horno', 'En Despacho'];
+
+        // --- PREMIUM NOTIFICATIONS ---
+        const Notify = {
+            show(msg, type = 'info') {
+                const container = document.getElementById('notyf-container');
+                const toast = document.createElement('div');
+                toast.className = `notyf ${type}`;
+                
+                const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-times-circle' : 'fa-info-circle');
+                
+                toast.innerHTML = `
+                    <i class="fas ${icon} notyf-icon"></i>
+                    <span>${msg}</span>
+                `;
+                
+                container.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.classList.add('notyf-out');
+                    setTimeout(() => toast.remove(), 400);
+                }, 3500);
+            },
+            success(msg) { this.show(msg, 'success'); },
+            error(msg) { this.show(msg, 'error'); },
+            info(msg) { this.show(msg, 'info'); }
+        };
+
+        // --- CUSTOM MODAL ---
+        window.confirmAction = function(title, desc, onConfirm, confirmText = 'CONFIRMAR') {
+            const modal = document.getElementById('custom-modal');
+            const confirmBtn = document.getElementById('modal-confirm');
+            const cancelBtn = document.getElementById('modal-cancel');
+            
+            document.querySelector('.modal-title').textContent = title;
+            document.getElementById('modal-desc').textContent = desc;
+            confirmBtn.textContent = confirmText;
+            
+            modal.style.display = 'flex';
+            
+            const close = () => modal.style.display = 'none';
+            
+            confirmBtn.onclick = () => { close(); onConfirm(); };
+            cancelBtn.onclick = close;
+        };
+
+        // --- PRICE FORMATTING (Chilean Style) ---
+        window.formatCLPInput = function(input) {
+            let val = input.value.replace(/\D/g, ''); // Solo números
+            if (val === '') {
+                input.value = '';
+                return;
+            }
+            input.value = parseInt(val).toLocaleString('es-CL');
+        };
+
+        // --- TAB SWITCHING ---
+        window.switchTab = function(tab) {
+            document.querySelectorAll('.admin-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.admin-nav a').forEach(a => a.classList.remove('active'));
+            
+            const targetView = document.getElementById('view-' + tab);
+            const targetNav = document.getElementById('nav-' + tab);
+            
+            if (targetView) targetView.classList.add('active');
+            if (targetNav) targetNav.classList.add('active');
+            
+            if (tab === 'dashboard') renderOrders();
+            if (tab === 'content') renderAdminMenu();
+            if (tab === 'reports') renderReports();
+            
+            // Auto-close sidebar on mobile after selection
+            if (window.innerWidth <= 900) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        };
+
+        // --- DASHBOARD: ORDERS ---
+        async function renderOrders() {
+            const container = document.getElementById('order-history');
+            let orders = await Store.getOrders();
+
+            // Special Sorting: "Entregada" orders go to the bottom
+            orders.sort((a, b) => {
+                if (a.status === 'Entregada' && b.status !== 'Entregada') return 1;
+                if (a.status !== 'Entregada' && b.status === 'Entregada') return -1;
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            });
+
+            container.innerHTML = '';
+
+            document.getElementById('count-pending').textContent = orders.filter(o => o.status === 'Recibido' || o.status === 'Preparación').length;
+            document.getElementById('count-oven').textContent = orders.filter(o => o.status === 'Al Horno').length;
+            document.getElementById('count-today').textContent = orders.filter(o => o.status !== 'Entregada').length;
+
+            orders.forEach(order => {
+                const div = document.createElement('div');
+                div.className = 'order-row';
+                div.innerHTML = `
+                    <div class="order-header">
+                        <div class="order-meta">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+                                <span style="font-family: var(--font-mono); font-size: 0.75rem;">
+                                    ID: <span style="color:var(--it-green)">${order.orderNumber || 'S/N'}</span>
+                                </span>
+                                <span style="font-size:0.75rem; color:var(--muted)">[${Store.formatTime(order.timestamp)}]</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <span class="order-customer" style="margin-top:0">${order.customer}</span>
+                                <span style="color:var(--it-white); font-weight:700; font-family:var(--font-mono); font-size:1.2rem;">$${(order.total || 0).toLocaleString()}</span>
+                            </div>
+                            <div style="color:rgba(255,255,255,0.7); margin-top: 5px; font-size: 0.9rem;">${order.details}</div>
+                            
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.8rem; font-family: var(--font-mono);">
+                                <div title="Tipo de Entrega"><i class="fas fa-${order.type === 'Retiro' ? 'store' : 'truck'}"></i> ${order.type || 'N/A'}</div>
+                                <div title="Medio de Pago" style="text-align:right"><i class="fas fa-credit-card"></i> ${order.payment || 'N/A'}</div>
+                                ${order.address ? `<div style="grid-column: span 2; color: var(--muted);"><i class="fas fa-map-marker-alt"></i> ${order.address}</div>` : ''}
+                            </div>
+                        </div>
+                        <span class="status-badge status-${order.status.replace(' ', '_')}">${order.status}</span>
+                    </div>
+                        </div>
+                        <div class="status-footer" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; display: flex; gap: 0.8rem; align-items: center;">
+                            <div class="status-buttons" style="flex: 1;">
+                                ${statuses.map(s => `
+                                    <button class="status-btn ${order.status === s ? 'active' : ''}" 
+                                            data-id="${order.id}" data-status="${s}">${s}</button>
+                                `).join('')}
+                            </div>
+                            
+                            ${order.status === 'En Despacho' || order.status === 'Entregada' ? `
+                                <button class="status-btn ${order.status === 'Entregada' ? 'active' : ''}" 
+                                        style="${order.status === 'Entregada' ? 'background: #27ae60;' : 'border-color: #27ae60; color: #27ae60;'}"
+                                        data-id="${order.id}" data-status="Entregada">
+                                    <i class="fas fa-check-double"></i> ENTREGADA
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            // Re-bind buttons (standard for module scoping)
+            container.querySelectorAll('.status-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    await updateStatus(btn.dataset.id, btn.dataset.status);
+                });
+            });
+        }
+
+        async function updateStatus(id, newStatus) {
+            try {
+                await Store.updateOrderStatus(id, newStatus);
+                Notify.success(`Pedido actualizado a: ${newStatus}`);
+                renderOrders();
+            } catch (err) {
+                Notify.error("Error al actualizar el pedido.");
+            }
+        }
+
+        document.getElementById('order-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.disabled = true;
+            btn.textContent = 'REGISTRANDO...';
+
+            try {
+                const orderData = {
+                    customer: document.getElementById('customer-name').value,
+                    details: document.getElementById('order-details').value,
+                    total: parseFloat(document.getElementById('order-total').value.replace(/\D/g, '')),
+                    type: document.getElementById('order-type').value,
+                    payment: document.getElementById('order-payment').value,
+                    address: document.getElementById('customer-address').value || '',
+                    customerWhatsapp: document.getElementById('customer-whatsapp').value
+                };
+
+                const savedOrder = await Store.addOrder(orderData);
+                Notify.success(`Pedido ${savedOrder.orderNumber} registrado.`);
+                
+                // WhatsApp Automation
+                if (orderData.customerWhatsapp) {
+                    const cleanPhone = orderData.customerWhatsapp.replace(/\D/g, '');
+                    if (cleanPhone) {
+                        confirmAction(
+                            "📲 ¿ENVIAR WHATSAPP?",
+                            `¿Deseas enviar el link de seguimiento al cliente ${orderData.customer} por WhatsApp?`,
+                            async () => {
+                                const settings = await Store.getSettings();
+                                const storeName = (settings.store && settings.store.name) || "Only Pizza";
+                                const text = encodeURIComponent(`🍕 *¡Hola ${orderData.customer}!* Tu pedido *${savedOrder.orderNumber}* en *${storeName}* ha sido registrado.\n\n📍 *Tipo:* ${orderData.type}\n💰 *Total:* $${orderData.total.toLocaleString()}\n\n🔗 *Sigue tu pedido aquí:* ${window.location.origin}/index.html?track=${savedOrder.orderNumber}`);
+                                window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
+                            },
+                            "ENVIAR WHATSAPP"
+                        );
+                    }
+                }
+
+                e.target.reset();
+                document.getElementById('customer-whatsapp').value = '+56';
+                toggleAddressField(); // Reset field visibility
+                renderOrders();
+            } catch (err) {
+                Notify.error("Error al registrar el pedido.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'REGISTRAR EN SISTEMA';
+            }
+        });
+
+        // Toggle address field based on order type
+        const typeSelect = document.getElementById('order-type');
+        const addressGroup = document.getElementById('address-group');
+        
+        function toggleAddressField() {
+            if (typeSelect.value === 'Retiro') {
+                addressGroup.style.display = 'none';
+                document.getElementById('customer-address').value = '';
+            } else {
+                addressGroup.style.display = 'block';
+            }
+        }
+        
+        typeSelect.addEventListener('change', toggleAddressField);
+        // Run once on init
+        toggleAddressField();
+
+        // --- CONTENT: PIZZA EDITOR ---
+        let currentPhotoFile = null;
+
+        document.getElementById('pizza-photo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            currentPhotoFile = file;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const preview = document.getElementById('photo-preview');
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+                document.getElementById('upload-label').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        async function renderAdminMenu() {
+            const container = document.getElementById('admin-menu-grid');
+            const pizzas = await Store.getPizzas();
+            
+            if (pizzas.length === 0) {
+                container.innerHTML = '<div style="color:var(--muted); padding:2rem; grid-column:1/-1; text-align:center;">// NO HAY PIZZAS EN EL MENÚ</div>';
+                return;
+            }
+
+            container.innerHTML = pizzas.map(p => `
+                <div class="admin-menu-item" onclick='openEditModal(${JSON.stringify(p).replace(/'/g, "&apos;")})'>
+                    ${p.image ? `<img src="${p.image}" class="admin-menu-img" style="object-fit:cover;">` : `<div style="width:60px; height:60px; display:flex; align-items:center; justify-content:center; background:#111;">🍕</div>`}
+                    <div class="admin-menu-info">
+                        <div style="font-weight:700; color:#fff">${p.name}</div>
+                        <div style="color:var(--muted); font-size:0.6rem">$${(p.price || 0).toLocaleString()}</div>
+                    </div>
+                    <button class="delete-btn" data-id="${p.id}" data-name="${p.name}" onclick="event.stopPropagation()"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+
+            container.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const id = btn.dataset.id;
+                    const name = btn.dataset.name;
+                    confirmAction(
+                        "ELIMINAR PIZZA", 
+                        `¿Estás seguro de que quieres eliminar la pizza "${name}"? Esta acción será inmediata.`,
+                        async () => {
+                            const success = await Store.deletePizza(id);
+                            if (success) {
+                                Notify.success("Pizza eliminada con éxito.");
+                                renderAdminMenu();
+                            } else {
+                                Notify.error("Error al eliminar la pizza.");
+                            }
+                        },
+                        "ELIMINAR PRODUCTO"
+                    );
+                };
+            });
+        }
+
+        // --- EDIT PIZZA LOGIC ---
+        let editPhotoFile = null;
+
+        window.openEditModal = function(pizza) {
+            const modal = document.getElementById('edit-pizza-modal');
+            editPhotoFile = null;
+            
+            document.getElementById('edit-pizza-id').value = pizza.id;
+            document.getElementById('edit-pizza-name').value = pizza.name;
+            document.getElementById('edit-pizza-ingredients').value = (pizza.ingredients || []).join(', ');
+            document.getElementById('edit-pizza-price').value = (pizza.price || 0).toLocaleString('es-CL');
+            document.getElementById('edit-pizza-category').value = pizza.category || 'Clásicas';
+            
+            const preview = document.getElementById('edit-photo-preview');
+            const label = document.getElementById('edit-upload-label');
+            
+            if (pizza.image) {
+                preview.src = pizza.image;
+                preview.style.display = 'block';
+                label.style.display = 'none';
+            } else {
+                preview.style.display = 'none';
+                label.style.display = 'block';
+            }
+            
+            modal.style.display = 'flex';
+        };
+
+        window.closeEditModal = function() {
+            document.getElementById('edit-pizza-modal').style.display = 'none';
+        };
+
+        document.getElementById('edit-pizza-photo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            editPhotoFile = file;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const preview = document.getElementById('edit-photo-preview');
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+                document.getElementById('edit-upload-label').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('edit-pizza-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'ACTUALIZANDO...';
+
+            const id = document.getElementById('edit-pizza-id').value;
+            const data = {
+                name: document.getElementById('edit-pizza-name').value.toUpperCase(),
+                ingredients: document.getElementById('edit-pizza-ingredients').value.split(',').map(i => i.trim()),
+                price: parseInt(document.getElementById('edit-pizza-price').value.replace(/\D/g, '')),
+                category: document.getElementById('edit-pizza-category').value,
+                image: document.getElementById('edit-photo-preview').src // Keep old if not changed
+            };
+
+            try {
+                const success = await Store.updatePizza(id, data, editPhotoFile);
+                if (success) {
+                    Notify.success("Pizza actualizada con éxito.");
+                    closeEditModal();
+                    renderAdminMenu();
+                } else {
+                    Notify.error("Error al actualizar la pizza.");
+                }
+            } catch (err) {
+                Notify.error("Error al guardar cambios.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+
+        document.getElementById('pizza-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'SUBIENDO...';
+
+            try {
+                await Store.addPizza({
+                    name: document.getElementById('pizza-name').value.toUpperCase(),
+                    ingredients: document.getElementById('pizza-ingredients').value.split(',').map(i => i.trim()),
+                    price: parseInt(document.getElementById('pizza-price').value.replace(/\D/g, '')),
+                    category: document.getElementById('pizza-category').value
+                }, currentPhotoFile);
+                
+                Notify.success("Pizza guardada en el menú.");
+                e.target.reset();
+                currentPhotoFile = null;
+                document.getElementById('photo-preview').style.display = 'none';
+                document.getElementById('upload-label').style.display = 'block';
+                renderAdminMenu();
+            } catch (err) {
+                Notify.error("Error al guardar la pizza.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+
+        // --- AUTH ---
+        window.handleLogin = async function() {
+            const email = document.getElementById('login-user').value;
+            const p = document.getElementById('login-pass').value;
+            const btn = document.querySelector('.login-btn');
+            const originalText = btn.textContent;
+            
+            btn.disabled = true;
+            btn.textContent = 'AUTENTICANDO...';
+
+            const success = await Store.auth.login(email, p);
+            if (success) {
+                Notify.success("Acceso concedido.");
+            } else {
+                Notify.error("Correo o contraseña incorrectos.");
+                document.getElementById('login-error').style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        };
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+            
+            // Add overlay if it doesn't exist
+            let overlay = document.getElementById('sidebar-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'sidebar-overlay';
+                overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1999; backdrop-filter:blur(4px);';
+                overlay.onclick = toggleSidebar;
+                document.body.appendChild(overlay);
+            } else {
+                overlay.remove();
+            }
+        }
+;
+
+        // --- SIDEBAR IMPROVEMENTS ---
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.querySelector('.mobile-toggle');
+            
+            // Close if clicking outside and it's open
+            if (sidebar.classList.contains('open') && 
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+
+
+        // --- OFFERS MANAGEMENT ---
+        async function renderOffersAdmin() {
+            const container = document.getElementById('offers-admin-grid');
+            const offers = await Store.getOffers();
+            const settings = await Store.getSettings();
+            
+            // Toggle visibility
+            const toggle = document.getElementById('toggle-offers');
+            toggle.checked = settings.landing?.offersEnabled !== false;
+
+            container.innerHTML = offers.map((off, i) => `
+                <div class="offer-edit-card" data-index="${i}" data-id="${off.id}">
+                    <h4>TARJETA DE OFERTA #${i+1}</h4>
+                    <div class="admin-form">
+                        <div class="field-group">
+                            <label>Descuento / Badge (Ej: 2X1, 30%, GRATIS)</label>
+                            <input type="text" class="off-discount" value="${off.discount || ''}">
+                        </div>
+                        <div class="field-group">
+                            <label>Título de la Oferta</label>
+                            <input type="text" class="off-title" value="${off.title || ''}">
+                        </div>
+                        <div class="field-group">
+                            <label>Descripción</label>
+                            <textarea class="off-desc" style="height:60px">${off.desc || ''}</textarea>
+                        </div>
+                        <div class="field-group">
+                            <label>Etiqueta de Validez (Ej: TODO EL MES, FINES DE SEMANA)</label>
+                            <input type="text" class="off-tag" value="${off.tag || ''}">
+                        </div>
+                        <div style="display:flex; gap:1rem; align-items:center">
+                            <label style="font-family:var(--font-mono); font-size:0.7rem; color:var(--muted)">DESESTACAR</label>
+                            <input type="checkbox" class="off-featured" ${off.featured ? 'checked' : ''}>
+                            <label style="font-family:var(--font-mono); font-size:0.7rem; color:var(--muted)">DESTACADA (GLOW)</label>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('save-offers-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('save-offers-btn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'GUARDANDO...';
+
+            try {
+                // 1. Update Settings
+                const offersEnabled = document.getElementById('toggle-offers').checked;
+                await Store.updateSetting('landing', { offersEnabled });
+
+                // 2. Update Offers
+                const cards = document.querySelectorAll('.offer-edit-card');
+                for (const card of cards) {
+                    const id = card.dataset.id;
+                    const data = {
+                        discount: card.querySelector('.off-discount').value,
+                        title: card.querySelector('.off-title').value,
+                        desc: card.querySelector('.off-desc').value,
+                        tag: card.querySelector('.off-tag').value,
+                        featured: card.querySelector('.off-featured').checked,
+                        // Maintain original layout properties
+                        order: parseInt(card.dataset.index) + 1
+                    };
+                    await Store.updateOffer(id, data);
+                }
+
+                Notify.success("Ofertas y configuración actualizadas.");
+            } catch (err) {
+                console.error(err);
+                Notify.error("Error al guardar las ofertas.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+
+        // --- REPORTS: ANALYTICS & CHARTS ---
+        let salesChart = null;
+        let rankingChart = null;
+
+        async function renderReports() {
+            const historyList = document.getElementById('daily-history-list');
+            const revenueHistoric = document.getElementById('total-revenue-historic');
+            const totalDaysElem = document.getElementById('total-days-closed');
+            const summaryTable = document.getElementById('monthly-summary-table');
+            
+            if (!historyList) return;
+
+            const history = await Store.getDailyHistory();
+            historyList.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<div style="color:var(--muted); font-family:var(--font-mono); text-align:center; padding:2rem;">// NO HAY HISTORIAL DE CIERRES AÚN</div>';
+                revenueHistoric.textContent = '$0';
+                totalDaysElem.textContent = '0';
+                return;
+            }
+
+            // 1. Process Data for Charts & Summary
+            let totalRevenue = 0;
+            const monthlyData = {}; // { "2026-03": revenue }
+            const globalProductRanking = {}; // { "PEPPERONI": totalQty }
+            
+            history.forEach(day => {
+                totalRevenue += (day.totalSales || 0);
+                
+                // History List (Daily)
+                const div = document.createElement('div');
+                div.className = 'order-row';
+                div.style.borderLeft = '4px solid var(--it-green)';
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="order-meta">
+                            <span style="color:var(--it-green); font-size:1rem; font-weight:700;">CIERRE: ${Store.formatDate(day.date).split(',')[0]}</span>
+                            <div style="color:var(--muted); font-size:0.7rem; margin-top:3px;">${day.orderCount} pedidos entregados</div>
+                        </div>
+                        <div style="font-size:1.4rem; color:var(--it-white); font-family:var(--font-display)">$${(day.totalSales || 0).toLocaleString()}</div>
+                    </div>
+                `;
+                historyList.appendChild(div);
+
+                // Monthly Aggregation
+                const date = new Date(day.date);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                monthlyData[monthKey] = (monthlyData[monthKey] || 0) + (day.totalSales || 0);
+
+                // Product Aggregation
+                if (day.productRanking) {
+                    Object.entries(day.productRanking).forEach(([name, qty]) => {
+                        globalProductRanking[name] = (globalProductRanking[name] || 0) + qty;
+                    });
+                }
+            });
+
+            revenueHistoric.textContent = `$${totalRevenue.toLocaleString()}`;
+            totalDaysElem.textContent = history.length;
+
+            // 2. Render Monthly Summary Table
+            const monthNames = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+            const sortedMonths = Object.keys(monthlyData).sort().reverse();
+            
+            summaryTable.innerHTML = sortedMonths.map(key => {
+                const [year, month] = key.split('-');
+                return `
+                    <div style="display:flex; justify-content:space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05)">
+                        <span style="color:var(--muted)">${monthNames[parseInt(month)-1]} ${year}</span>
+                        <span style="color:var(--it-green); font-weight:700">$${monthlyData[key].toLocaleString()}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // 3. Render Charts
+            renderSalesChart(monthlyData);
+            renderRankingChart(globalProductRanking);
+        }
+
+        function renderSalesChart(monthlyData) {
+            const ctx = document.getElementById('chart-monthly-sales').getContext('2d');
+            const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+            
+            const labels = Object.keys(monthlyData).sort();
+            const values = labels.map(key => monthlyData[key]);
+            const displayLabels = labels.map(key => {
+                const [y, m] = key.split('-');
+                return `${monthNames[parseInt(m)-1]} ${y.slice(-2)}`;
+            });
+
+            if (salesChart) salesChart.destroy();
+            salesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: displayLabels,
+                    datasets: [{
+                        label: 'Ventas Mensuales',
+                        data: values,
+                        backgroundColor: 'rgba(0, 140, 69, 0.4)',
+                        borderColor: '#008c45',
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#aaa', callback: v => '$' + v.toLocaleString() } },
+                        x: { grid: { display: false }, ticks: { color: '#aaa' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderRankingChart(ranking) {
+            const ctx = document.getElementById('chart-product-ranking').getContext('2d');
+            
+            // Sort by sales quantity and take top 5
+            const sortedItems = Object.entries(ranking)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            if (rankingChart) rankingChart.destroy();
+            
+            if (sortedItems.length === 0) {
+                // No data yet
+                return;
+            }
+
+            rankingChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: sortedItems.map(i => i[0]),
+                    datasets: [{
+                        data: sortedItems.map(i => i[1]),
+                        backgroundColor: [
+                            '#008c45', // Green
+                            '#cd212a', // Red
+                            '#f4f5f0', // White-ish
+                            '#00592d', // Dark Green
+                            '#8b151c'  // Dark Red
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#aaa', font: { family: 'Space Mono', size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- ACTION: CLOSE DAY ---
+        const btnCloseDay = document.getElementById('btn-close-day');
+        if (btnCloseDay) {
+            btnCloseDay.onclick = () => {
+                const deliveredCount = document.querySelectorAll('.status-badge.status-Entregada').length;
+                if (deliveredCount === 0) {
+                    Notify.info("No hay pedidos entregados para cerrar el día.");
+                    return;
+                }
+
+                confirmAction(
+                    "¿FINALIZAR DÍA DE VENTAS?",
+                    `Esto archivará los ${deliveredCount} pedidos entregados y generará un reporte de ventas. Esta acción no se puede deshacer.`,
+                    async () => {
+                        try {
+                            const result = await Store.closeDaySales();
+                            if (result.success) {
+                                Notify.success(`Día cerrado: $${result.total.toLocaleString()} (${result.count} pedidos)`);
+                                renderOrders();
+                                renderReports();
+                            } else {
+                                Notify.info(result.message);
+                            }
+                        } catch (err) {
+                            Notify.error("Error al cerrar el día.");
+                        }
+                    },
+                    "FINALIZAR DÍA"
+                );
+            };
+        }
+
+        // --- SYSTEM: SETTINGS & STORE INFO ---
+        async function renderSystemSettings() {
+            const settings = await Store.getSettings();
+            const store = settings.store || {};
+            
+            document.getElementById('set-store-name').value = store.name || '';
+            document.getElementById('set-store-whatsapp').value = store.whatsapp || '';
+            document.getElementById('set-store-address').value = store.address || '';
+        }
+
+        document.getElementById('btn-save-store').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-save-store');
+            btn.disabled = true;
+            
+            const data = {
+                name: document.getElementById('set-store-name').value.toUpperCase(),
+                whatsapp: document.getElementById('set-store-whatsapp').value,
+                address: document.getElementById('set-store-address').value.toUpperCase()
+            };
+
+            try {
+                await Store.updateSetting('store', data);
+                Notify.success("Datos del local actualizados.");
+            } catch (err) {
+                Notify.error("Error al guardar ajustes.");
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-save-pass').addEventListener('click', async () => {
+            const newPass = document.getElementById('set-admin-pass').value;
+            if (!newPass || newPass.length < 6) {
+                Notify.error("La contraseña debe tener al menos 6 caracteres.");
+                return;
+            }
+
+            const btn = document.getElementById('btn-save-pass');
+            btn.disabled = true;
+
+            try {
+                const { updatePassword } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
+                await updatePassword(auth.currentUser, newPass);
+                Notify.success("Contraseña actualizada correctamente.");
+                document.getElementById('set-admin-pass').value = '';
+            } catch (err) {
+                console.error(err);
+                Notify.error("Error al actualizar contraseña. Re-inicia sesión e intenta de nuevo.");
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // --- INITIALIZATION & AUTH STATE ---
+        Store.auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('login-overlay').style.display = 'none';
+                renderOrders();
+                renderAdminMenu();
+                renderOffersAdmin();
+                renderReports();
+                renderSystemSettings();
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+            }
+        });
+    </script>
+</body>
+</html>

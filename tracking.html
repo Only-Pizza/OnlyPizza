@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Only Pizza — Radar de Pedidos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="https://i.ibb.co/bn1n6yp/Pizza-removebg-preview.png">
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Radar Background Decoration */
+        .radar-decoration {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 140, 69, 0.1);
+            pointer-events: none;
+            z-index: -1;
+        }
+        .radar-decoration::before, .radar-decoration::after {
+            content: ''; position: absolute; inset: 0;
+            border-radius: 50%; border: 1px solid rgba(0, 140, 69, 0.05);
+            transform: scale(0.7);
+        }
+        .radar-decoration::after { transform: scale(0.4); }
+        .radar-sweep {
+            position: absolute; width: 100%; height: 100%;
+            background: conic-gradient(from 0deg, rgba(0, 140, 69, 0.2) 0deg, transparent 90deg);
+            border-radius: 50%;
+            animation: sweep 4s linear infinite;
+        }
+        @keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .tracker-container {
+            max-width: 700px;
+            margin: 10vh auto;
+            padding: 3rem;
+            background: rgba(5, 5, 5, 0.9);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        .tracker-container::before {
+            content: 'SISTEMA_DE_MONITOREO_v4.2';
+            position: absolute; top: 15px; left: 15px;
+            font-family: var(--font-mono); font-size: 0.75rem; color: var(--it-green);
+            opacity: 0.7;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .search-box input {
+            flex: 1;
+            background: #000;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 1.2rem;
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .search-box input:focus { border-color: var(--it-green); outline: none; }
+        .track-btn {
+            background: var(--it-green);
+            color: #fff;
+            border: none;
+            padding: 0 2.5rem;
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .track-btn:hover { background: var(--it-white); color: #000; }
+        
+        /* Status High-Tech Display */
+        .status-display {
+            display: none;
+            margin-top: 4rem;
+            animation: fadeUp 0.8s forwards;
+            text-align: left;
+        }
+        
+        .progress-container {
+            position: relative;
+            height: 10px;
+            background: rgba(255,255,255,0.05);
+            margin: 5rem 0;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+        }
+        .progress-bar {
+            height: 4px;
+            background: var(--it-green);
+            width: 0%;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px var(--it-green);
+            margin-left: 2px;
+        }
+        
+        .status-points {
+            position: absolute; top: -30px; left:0; width: 100%;
+            display: flex; justify-content: space-between;
+        }
+        .status-point {
+            width: 8px; height: 8px; background: #222; border: 1px solid var(--border);
+            position: relative;
+        }
+        .status-point.active { background: var(--it-green); border-color: var(--it-green); box-shadow: 0 0 10px var(--it-green); }
+        .status-point.active::after {
+            content: ''; position: absolute; inset: -5px; border: 1px solid var(--it-green); opacity: 0.5;
+        }
+
+        .step-label {
+            position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+            font-family: var(--font-mono); font-size: 0.9rem; color: var(--muted);
+            white-space: nowrap; text-transform: uppercase;
+        }
+        .status-point.active .step-label { color: var(--it-green); font-weight: 700; }
+
+        .big-status {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+        }
+        .order-meta { font-family: var(--font-mono); font-size: 0.9rem; color: var(--muted); }
+
+        /* Scroller indicator */
+        .loading-line {
+            width: 100%; height: 2px; background: rgba(0,140,69,0.1);
+            position: relative; overflow: hidden; margin: 1rem 0;
+        }
+        .loading-line::after {
+            content: ''; position: absolute; left:-100%; width: 50%; height:100%;
+            background: var(--it-green); animation: loading 2s infinite linear;
+        }
+        @keyframes loading { from { left: -100%; } to { left: 200%; } }
+        /* Mobile Responsiveness */
+        @media (max-width: 600px) {
+            .tracker-container { 
+                padding: 1.5rem; 
+                margin: 5vh 1rem;
+            }
+            .tracker-container::before {
+                top: auto; bottom: 10px; left: 50%; transform: translateX(-50%);
+                font-size: 0.6rem;
+            }
+            .section-h2 { font-size: 2.2rem !important; }
+            .search-box { flex-direction: column; }
+            .track-btn { padding: 1rem; }
+
+            /* Vertical Progress Tracker for Mobile */
+            .progress-container {
+                flex-direction: column;
+                height: 300px;
+                width: 2px;
+                margin: 3rem auto;
+                align-items: center;
+            }
+            .progress-bar {
+                width: 4px !important; /* Horizontal width on vertical bar */
+                height: 0%;
+                margin: 0;
+                transition: height 1s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .status-points {
+                flex-direction: column;
+                height: 100%;
+                top: 0; left: -10px;
+                width: 20px;
+            }
+            .status-point {
+                margin: 0 auto;
+            }
+            .step-label {
+                left: 35px;
+                top: 50%;
+                transform: translateY(-50%);
+                text-align: left;
+                width: 150px;
+            }
+            .big-status { font-size: 2.5rem; text-align: center; }
+            .order-meta { text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="radar-decoration"><div class="radar-sweep"></div></div>
+
+    <nav id="navbar" class="scrolled">
+        <a href="pizza-landing.html" class="nav-logo">
+            <img src="https://i.ibb.co/bn1n6yp/Pizza-removebg-preview.png" alt="Only Pizza Logo">
+        </a>
+        <ul class="nav-links">
+            <li><a href="pizza-landing.html#menu">MENÚ</a></li>
+            <li><a href="pizza-landing.html#offers">OFERTAS</a></li>
+            <li><a href="pizza-landing.html">VOLVER</a></li>
+        </ul>
+    </nav>
+
+    <main class="tracker-container">
+        <div class="section-tag">Seguimiento de Pedido</div>
+        <h2 class="section-h2" style="font-size:3rem">LOCALIZAR <span style="color:var(--it-green)">PEDIDO</span></h2>
+        
+        <div class="search-box">
+            <input type="text" id="order-id-input" placeholder="ORD_ID: OP-XXXXXX">
+            <button class="track-btn" onclick="trackOrder()">BUSCAR</button>
+        </div>
+
+        <div id="status-display" class="status-display">
+            <div class="loading-line"></div>
+            <div class="order-meta" id="order-info"></div>
+            <div class="big-status" id="current-status">RECIBIDO</div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+                <div class="status-points">
+                    <div class="status-point" id="pt-0"><span class="step-label">Recibido</span></div>
+                    <div class="status-point" id="pt-1"><span class="step-label">Preparación</span></div>
+                    <div class="status-point" id="pt-2"><span class="step-label">Al Horno</span></div>
+                    <div class="status-point" id="pt-3"><span class="step-label">Listo</span></div>
+                    <div class="status-point" id="pt-4"><span class="step-label">En Despacho</span></div>
+                </div>
+            </div>
+
+            <p class="order-meta" style="text-align:center; margin-top: 2rem;">Estimado cliente, su pedido está siendo procesado con tecnología de vanguardia.</p>
+        </div>
+
+        <div id="error-msg" style="display:none; color: var(--it-red); font-family: var(--font-mono); margin-top: 2rem; font-size: 0.8rem;">
+            [ERROR]: ID NO ENCONTRADO EN LA BASE DE DATOS.
+        </div>
+    </main>
+
+    <script type="module" src="data-manager.js"></script>
+    <script type="module">
+        import { Store } from './data-manager.js';
+
+        const statuses = ['Recibido', 'Preparación', 'Al Horno', 'Listo', 'En Despacho'];
+        let currentUnsubscribe = null;
+        
+        window.trackOrder = function() {
+            const id = document.getElementById('order-id-input').value.trim().toUpperCase();
+            const display = document.getElementById('status-display');
+            const error = document.getElementById('error-msg');
+            const btn = document.querySelector('.track-btn');
+
+            // Feedback visual de búsqueda
+            btn.textContent = 'BUSCANDO...';
+            btn.disabled = true;
+
+            // Limpiar suscripción anterior si existe
+            if (currentUnsubscribe) {
+                currentUnsubscribe();
+            }
+            
+            // Iniciar escucha en tiempo real
+            currentUnsubscribe = Store.listenToOrder(id, (order) => {
+                btn.textContent = 'BUSCAR';
+                btn.disabled = false;
+
+                if (order) {
+                    display.style.display = 'block';
+                    error.style.display = 'none';
+                    
+                    document.getElementById('current-status').textContent = order.status.toUpperCase();
+                    document.getElementById('order-info').textContent = `SESIÓN: ${order.customer} // HORA CHILE: ${Store.formatTime(order.timestamp)}`;
+                    
+                    const statusIndex = statuses.indexOf(order.status);
+                    const progressWidth = (statusIndex / (statuses.length - 1)) * 100;
+                    if (window.innerWidth <= 600) {
+                        document.getElementById('progress-bar').style.height = progressWidth + '%';
+                        document.getElementById('progress-bar').style.width = '4px';
+                    } else {
+                        document.getElementById('progress-bar').style.width = progressWidth + '%';
+                        document.getElementById('progress-bar').style.height = '4px';
+                    }
+                    
+                    statuses.forEach((s, i) => {
+                        const pt = document.getElementById('pt-' + i);
+                        if (i <= statusIndex) pt.classList.add('active');
+                        else pt.classList.remove('active');
+                    });
+                } else {
+                    display.style.display = 'none';
+                    error.style.display = 'block';
+                }
+            });
+
+            // Si después de 2 segundos no hay respuesta (ej. ID no existe), dar timeout
+            setTimeout(() => {
+                if (btn.textContent === 'BUSCANDO...') {
+                    btn.textContent = 'BUSCAR';
+                    btn.disabled = false;
+                    display.style.display = 'none';
+                    error.style.display = 'block';
+                }
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
