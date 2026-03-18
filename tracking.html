@@ -249,9 +249,9 @@
         </div>
     </main>
 
-    <script type="module" src="data-manager.js"></script>
+    <script type="module" src="data-manager.js?v=4"></script>
     <script type="module">
-        import { Store } from './data-manager.js';
+        import { Store } from './data-manager.js?v=4';
 
         const statuses = ['Recibido', 'Preparación', 'Al Horno', 'Listo', 'En Despacho'];
         let currentUnsubscribe = null;
@@ -259,8 +259,13 @@
         window.trackOrder = function() {
             let id = document.getElementById('order-id-input').value.trim().toUpperCase();
             
-            // Sanitización extra: eliminar espacios internos (ej: "OP - XXXXXX" -> "OP-XXXXXX")
-            id = id.replace(/\s+/g, '');
+            // Sanitización ROBUSTA: eliminar espacios y normalizar guiones (en-dash/em-dash a normal)
+            id = id.replace(/\s+/g, '').replace(/[\u2013\u2014]/g, '-');
+            
+            // Si el usuario olvida el "OP-", se lo agregamos automáticamente si tiene 6 caracteres
+            if (id.length === 6 && !id.includes('-')) {
+                id = 'OP-' + id;
+            }
             
             const display = document.getElementById('status-display');
             const error = document.getElementById('error-msg');
@@ -305,6 +310,18 @@
                 } else {
                     display.style.display = 'none';
                     error.style.display = 'block';
+                    error.innerHTML = `[ERROR]: ID <span style="color:#fff">${id}</span> NO ENCONTRADO EN LA BASE DE DATOS.`;
+                }
+            }, (err) => {
+                // Manejo de errores de permisos (muy importante para este caso)
+                btn.textContent = 'BUSCAR';
+                btn.disabled = false;
+                display.style.display = 'none';
+                error.style.display = 'block';
+                if (err.code === 'permission-denied') {
+                    error.innerHTML = `[ERROR DE ACCESO]: LA BASE DE DATOS RECHAZÓ LA SOLICITUD.<br><small style="color:var(--muted)">ESTO SE DEBE A LAS REGLAS DE SEGURIDAD DE FIREBASE.</small>`;
+                } else {
+                    error.textContent = `[ERROR]: ${err.message}`;
                 }
             });
 
@@ -323,8 +340,10 @@
         const urlParams = new URLSearchParams(window.location.search);
         let trackParam = urlParams.get('track');
         if (trackParam) {
-            // Sanitizar parámetro de URL (eliminar espacios que puedan venir por mal encoding o copy-paste)
-            trackParam = trackParam.trim().toUpperCase().replace(/\s+/g, '');
+            // Sanitizar parámetro de URL con la misma lógica robusta
+            trackParam = trackParam.trim().toUpperCase().replace(/\s+/g, '').replace(/[\u2013\u2014]/g, '-');
+            if (trackParam.length === 6 && !trackParam.includes('-')) trackParam = 'OP-' + trackParam;
+            
             document.getElementById('order-id-input').value = trackParam;
             trackOrder();
         }

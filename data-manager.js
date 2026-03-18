@@ -146,9 +146,9 @@ const DB = {
   },
 
   // Listen for real-time changes (Tracking)
-  listenToOrder(orderId, callback) {
+  listenToOrder(orderId, callback, onError) {
     // Sanitización extra: eliminar espacios y normalizar mayúsculas
-    const sanitizedId = orderId.trim().toUpperCase().replace(/\s+/g, '');
+    const sanitizedId = orderId.trim().toUpperCase().replace(/\s+/g, '').replace(/[\u2013\u2014]/g, '-');
     
     // Try by OrderNumber
     const q = query(collection(db, "orders"), where("orderNumber", "==", sanitizedId));
@@ -156,7 +156,12 @@ const DB = {
     return onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
         callback({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
+      } else {
+        callback(null); // Explicitly notify if not found
       }
+    }, (error) => {
+      console.error("Firebase listen error:", error);
+      if (onError) onError(error);
     });
   },
 
