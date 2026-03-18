@@ -147,8 +147,11 @@ const DB = {
 
   // Listen for real-time changes (Tracking)
   listenToOrder(orderId, callback) {
+    // Sanitización extra: eliminar espacios y normalizar mayúsculas
+    const sanitizedId = orderId.trim().toUpperCase().replace(/\s+/g, '');
+    
     // Try by OrderNumber
-    const q = query(collection(db, "orders"), where("orderNumber", "==", orderId));
+    const q = query(collection(db, "orders"), where("orderNumber", "==", sanitizedId));
 
     return onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {

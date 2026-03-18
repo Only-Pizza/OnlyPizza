@@ -257,7 +257,11 @@
         let currentUnsubscribe = null;
         
         window.trackOrder = function() {
-            const id = document.getElementById('order-id-input').value.trim().toUpperCase();
+            let id = document.getElementById('order-id-input').value.trim().toUpperCase();
+            
+            // Sanitización extra: eliminar espacios internos (ej: "OP - XXXXXX" -> "OP-XXXXXX")
+            id = id.replace(/\s+/g, '');
+            
             const display = document.getElementById('status-display');
             const error = document.getElementById('error-msg');
             const btn = document.querySelector('.track-btn');
@@ -317,9 +321,11 @@
 
         // Auto-track if ?track= param is present in URL
         const urlParams = new URLSearchParams(window.location.search);
-        const trackParam = urlParams.get('track');
+        let trackParam = urlParams.get('track');
         if (trackParam) {
-            document.getElementById('order-id-input').value = trackParam.toUpperCase();
+            // Sanitizar parámetro de URL (eliminar espacios que puedan venir por mal encoding o copy-paste)
+            trackParam = trackParam.trim().toUpperCase().replace(/\s+/g, '');
+            document.getElementById('order-id-input').value = trackParam;
             trackOrder();
         }
     </script>
