@@ -249,7 +249,7 @@
         </div>
     </main>
 
-    <script type="module" src="data-manager.js?v=2"></script>
+    <script type="module" src="data-manager.js"></script>
     <script type="module">
         import { Store } from './data-manager.js';
 
@@ -257,7 +257,7 @@
         let currentUnsubscribe = null;
         
         window.trackOrder = function() {
-            const id = document.getElementById('order-id-input').value.replace(/\s+/g, '').toUpperCase();
+            const id = document.getElementById('order-id-input').value.trim().toUpperCase();
             const display = document.getElementById('status-display');
             const error = document.getElementById('error-msg');
             const btn = document.querySelector('.track-btn');
@@ -304,7 +304,7 @@
                 }
             });
 
-            // Si después de 10 segundos no hay respuesta (ej. ID no existe), dar timeout
+            // Si después de 2 segundos no hay respuesta (ej. ID no existe), dar timeout
             setTimeout(() => {
                 if (btn.textContent === 'BUSCANDO...') {
                     btn.textContent = 'BUSCAR';
@@ -312,7 +312,7 @@
                     display.style.display = 'none';
                     error.style.display = 'block';
                 }
-            }, 10000);
+            }, 2000);
         }
 
         // Auto-track if ?track= param is present in URL

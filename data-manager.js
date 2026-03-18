@@ -120,7 +120,7 @@ const DB = {
   async getOrders() {
     // Only get orders that are NOT archived (active dashboard)
     const q = query(
-      collection(db, "orders"), 
+      collection(db, "orders"),
       where("archived", "==", false),
       orderBy("timestamp", "desc")
     );
@@ -161,7 +161,7 @@ const DB = {
   async closeDaySales() {
     try {
       const q = query(
-        collection(db, "orders"), 
+        collection(db, "orders"),
         where("status", "==", "Entregada"),
         where("archived", "==", false)
       );
@@ -171,7 +171,7 @@ const DB = {
       if (deliveredOrders.length === 0) return { success: false, message: "No hay pedidos marcados como 'Entregada' para cerrar." };
 
       const totalSales = deliveredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-      
+
       // Simple product breakdown by parsing "details"
       const productCounts = {};
       deliveredOrders.forEach(o => {
@@ -229,7 +229,7 @@ const DB = {
       const q = query(collection(db, "offers"), orderBy("order"));
       const snapshot = await getDocs(q);
       const offers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      
+
       // If no offers exist, return defaults but don't save them yet
       if (offers.length === 0) {
         return [
