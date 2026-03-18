@@ -210,7 +210,65 @@
     </div>
   </a>
 
+  <!-- ===== ORDER CONFIRMATION MODAL ===== -->
+  <div id="order-modal" class="om-overlay" aria-hidden="true">
+    <div class="om-box" role="dialog" aria-labelledby="om-title">
+      <button class="om-close" id="om-close-btn" aria-label="Cerrar">✕</button>
+
+      <div class="om-header">
+        <div class="om-tag">// Confirmar pedido</div>
+        <h2 class="om-title" id="om-title">COMPLETA TU PEDIDO</h2>
+      </div>
+
+      <!-- Resumen del carrito -->
+      <div class="om-summary" id="om-cart-summary">
+        <!-- se rellena dinámicamente -->
+      </div>
+
+      <!-- Formulario -->
+      <div class="om-form">
+        <!-- Nombre -->
+        <div class="om-field">
+          <label for="om-name">Tu nombre</label>
+          <input type="text" id="om-name" placeholder="EJ: JUAN PÉREZ" autocomplete="off">
+        </div>
+
+        <!-- Tipo de entrega -->
+        <div class="om-field">
+          <label>Tipo de entrega</label>
+          <div class="om-toggle-group">
+            <button type="button" class="om-toggle active" data-val="Despacho" id="om-btn-despacho">🛵 Despacho</button>
+            <button type="button" class="om-toggle" data-val="Retiro" id="om-btn-retiro">🏠 Retiro en local</button>
+          </div>
+        </div>
+
+        <!-- Dirección (solo despacho) -->
+        <div class="om-field" id="om-address-group">
+          <label for="om-address">Dirección de entrega</label>
+          <input type="text" id="om-address" placeholder="EJ: CALLE LOS AROMOS 543" autocomplete="off">
+        </div>
+
+        <!-- Medio de pago -->
+        <div class="om-field">
+          <label>Medio de pago</label>
+          <div class="om-toggle-group om-pay-group">
+            <button type="button" class="om-toggle active" data-pay="Transferencia">💳 Transferencia</button>
+            <button type="button" class="om-toggle" data-pay="Débito/Crédito">🏧 Débito/Crédito</button>
+            <button type="button" class="om-toggle" data-pay="Efectivo">💵 Efectivo</button>
+          </div>
+        </div>
+
+        <!-- Botón confirmar -->
+        <button class="om-confirm-btn" id="om-confirm-btn">
+          Enviar pedido por WhatsApp →
+        </button>
+      </div>
+
+    </div>
+  </div>
+  <!-- ===== /ORDER CONFIRMATION MODAL ===== -->
+
   <script type="module" src="data-manager.js"></script>
-<script type="module" src="scripts.js"></script>
+  <script type="module" src="scripts.js"></script>
 </body>
 </html>

@@ -88,24 +88,26 @@ function updateCartUI() {
   const cta = document.querySelector('.nav-cta');
   const mobileCart = document.getElementById('mobile-cart-btn');
   const total = cart.reduce((sum, item) => sum + item.price, 0);
-  const waLink = generateWhatsAppLink();
 
-  // Desktop Navbar CTA
+  // Desktop Navbar CTA — opens modal instead of going directly to WA
   if (cta) {
     if (cart.length > 0) {
       cta.textContent = `Pedir (${cart.length}) - $${total.toLocaleString('es-CL')}`;
-      cta.href = waLink;
+      cta.href = '#';
+      cta.onclick = (e) => { e.preventDefault(); openOrderModal(); };
     } else {
       cta.textContent = 'Pedir Ahora';
       cta.href = '#';
+      cta.onclick = null;
     }
   }
 
-  // Mobile Floating Cart
+  // Mobile Floating Cart — opens modal
   if (mobileCart) {
     if (cart.length > 0) {
       mobileCart.classList.add('active');
-      mobileCart.href = waLink;
+      mobileCart.href = '#';
+      mobileCart.onclick = (e) => { e.preventDefault(); openOrderModal(); };
       const countEl = mobileCart.querySelector('.mcf-count');
       const totalEl = mobileCart.querySelector('.mcf-total');
       if (countEl) countEl.textContent = cart.length;
@@ -113,6 +115,7 @@ function updateCartUI() {
     } else {
       mobileCart.classList.remove('active');
       mobileCart.href = '#';
+      mobileCart.onclick = null;
     }
   }
 
@@ -122,16 +125,12 @@ function updateCartUI() {
     const count = cart.filter(p => p.id === id).length;
     const numEl = ctrl.querySelector('.qty-num');
     if (numEl) numEl.textContent = count;
-    
-    if (count > 0) {
-      ctrl.classList.add('active');
-    } else {
-      ctrl.classList.remove('active');
-    }
+    if (count > 0) ctrl.classList.add('active');
+    else ctrl.classList.remove('active');
   });
 }
 
-function generateWhatsAppLink() {
+function generateWhatsAppLink(orderData = {}) {
   if (cart.length === 0) return '#';
   
   const grouped = cart.reduce((acc, item) => {
@@ -139,14 +138,23 @@ function generateWhatsAppLink() {
     return acc;
   }, {});
 
-  let message = "¡Hola! Quiero realizar un pedido:\n\n";
-  for (const [name, qty] of Object.entries(grouped)) {
-    message += `• ${qty}x ${name}\n`;
+  const { name = '', deliveryType = 'Despacho', address = '', payment = 'Transferencia' } = orderData;
+
+  let message = `¡Hola! Quiero realizar un pedido 🍕\n`;
+  if (name) message += `👤 *${name.toUpperCase()}*\n`;
+  message += `\n`;
+
+  for (const [pizzaName, qty] of Object.entries(grouped)) {
+    message += `• ${qty}x ${pizzaName}\n`;
   }
-  
+
   const total = cart.reduce((sum, item) => sum + item.price, 0);
-  message += `\nTotal: $${total.toLocaleString('es-CL')}\n\n¿Me confirman el tiempo de entrega?`;
-  
+  message += `\n💰 *Total: $${total.toLocaleString('es-CL')} CLP*`;
+  message += `\n🚚 *Entrega: ${deliveryType}*`;
+  if (deliveryType === 'Despacho' && address) message += `\n📍 *Dirección: ${address}*`;
+  message += `\n💳 *Pago: ${payment}*`;
+  message += `\n\n¿Me confirman el tiempo de entrega? 🙏`;
+
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
@@ -273,6 +281,105 @@ document.addEventListener('DOMContentLoaded', () => {
       window.location.href = 'admin.html';
     }
   });
+
+  // ── ORDER MODAL LOGIC ──────────────────────────────────────────────────────
+  const omOverlay    = document.getElementById('order-modal');
+  const omCloseBtn   = document.getElementById('om-close-btn');
+  const omConfirmBtn = document.getElementById('om-confirm-btn');
+  const omCartSummary = document.getElementById('om-cart-summary');
+  const omAddressGroup = document.getElementById('om-address-group');
+  const omNameInput  = document.getElementById('om-name');
+  const omAddrInput  = document.getElementById('om-address');
+
+  let omDeliveryType = 'Despacho';
+  let omPayment = 'Transferencia';
+
+  function openOrderModal() {
+    if (cart.length === 0) return;
+
+    // Populate cart summary
+    const grouped = cart.reduce((acc, item) => {
+      acc[item.name] = (acc[item.name] || 0) + 1;
+      return acc;
+    }, {});
+    const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+    omCartSummary.innerHTML = Object.entries(grouped).map(([name, qty]) => {
+      const unitPrice = cart.find(p => p.name === name)?.price || 0;
+      return `<div class="om-summary-line"><span>${qty}x ${name}</span><span>$${(unitPrice * qty).toLocaleString('es-CL')}</span></div>`;
+    }).join('') + `<div class="om-summary-line total"><span>TOTAL</span><span>$${total.toLocaleString('es-CL')} CLP</span></div>`;
+
+    // Reset fields
+    omNameInput.value = '';
+    omAddrInput.value = '';
+    omDeliveryType = 'Despacho';
+    omPayment = 'Transferencia';
+    setActiveToggle(document.getElementById('om-btn-despacho'), '.om-toggle-group:not(.om-pay-group) .om-toggle');
+    setActiveToggle(omOverlay.querySelector('[data-pay="Transferencia"]'), '.om-pay-group .om-toggle');
+    omAddressGroup.classList.remove('hidden');
+
+    // Show modal
+    omOverlay.setAttribute('aria-hidden', 'false');
+    omOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => omNameInput.focus(), 350);
+  }
+
+  function closeOrderModal() {
+    omOverlay.classList.remove('active');
+    omOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  function setActiveToggle(btn, selector) {
+    omOverlay.querySelectorAll(selector).forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+  }
+
+  // Delivery type toggles
+  omOverlay.querySelectorAll('.om-toggle-group:not(.om-pay-group) .om-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      omDeliveryType = btn.dataset.val;
+      setActiveToggle(btn, '.om-toggle-group:not(.om-pay-group) .om-toggle');
+      if (omDeliveryType === 'Retiro') {
+        omAddressGroup.classList.add('hidden');
+      } else {
+        omAddressGroup.classList.remove('hidden');
+      }
+    });
+  });
+
+  // Payment toggles
+  omOverlay.querySelectorAll('.om-pay-group .om-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      omPayment = btn.dataset.pay;
+      setActiveToggle(btn, '.om-pay-group .om-toggle');
+    });
+  });
+
+  // Close events
+  omCloseBtn.addEventListener('click', closeOrderModal);
+  omOverlay.addEventListener('click', (e) => { if (e.target === omOverlay) closeOrderModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOrderModal(); });
+
+  // Confirm: build link and open WhatsApp
+  omConfirmBtn.addEventListener('click', () => {
+    const orderData = {
+      name: omNameInput.value.trim(),
+      deliveryType: omDeliveryType,
+      address: omAddrInput.value.trim(),
+      payment: omPayment
+    };
+    const link = generateWhatsAppLink(orderData);
+    if (link !== '#') {
+      closeOrderModal();
+      window.open(link, '_blank');
+    }
+  });
+
+  // Expose for other parts of the code
+  window.openOrderModal = openOrderModal;
+  // ── /ORDER MODAL LOGIC ─────────────────────────────────────────────────────
 });
 
 export { renderMenu, addToCart };
