@@ -141,21 +141,21 @@ function generateWhatsAppLink(orderData = {}) {
 
   const { name = '', deliveryType = 'Despacho', address = '', payment = 'Transferencia', notes = '' } = orderData;
 
-  let message = `¡Hola! Quiero realizar un pedido 🍕\n`;
-  if (name) message += `👤 *${name.toUpperCase()}*\n`;
+  let message = `\u00A1Hola! Quiero realizar un pedido \u{1F355}\n`;
+  if (name) message += `\u{1F464} *${name.toUpperCase()}*\n`;
   message += `\n`;
 
   for (const [pizzaName, qty] of Object.entries(grouped)) {
-    message += `• ${qty}x ${pizzaName}\n`;
+    message += `\u2022 ${qty}x ${pizzaName}\n`;
   }
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
-  message += `\n💰 *Total: $${total.toLocaleString('es-CL')} CLP*`;
-  message += `\n🚚 *Entrega: ${deliveryType}*`;
-  if (deliveryType === 'Despacho' && address) message += `\n📍 *Dirección: ${address}*`;
-  message += `\n💳 *Pago: ${payment}*`;
-  if (notes) message += `\n\n📝 *Notas: ${notes}*\n`;
-  message += `\n¿Me confirman el tiempo de entrega? 🙏`;
+  message += `\n\u{1F4B0} *Total: $${total.toLocaleString('es-CL')} CLP*`;
+  message += `\n\u{1F69A} *Entrega: ${deliveryType}*`;
+  if (deliveryType === 'Despacho' && address) message += `\n\u{1F4CD} *Dirección: ${address}*`;
+  message += `\n\u{1F4B3} *Pago: ${payment}*`;
+  if (notes) message += `\n\n\u{1F4DD} *Notas: ${notes}*\n`;
+  message += `\n¿Me confirman el tiempo de entrega? \u{1F64F}`;
 
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
 }

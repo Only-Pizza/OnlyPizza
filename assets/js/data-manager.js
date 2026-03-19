@@ -145,6 +145,21 @@ const DB = {
     await updateDoc(orderRef, { status });
   },
 
+  // Listen for all active orders (Dashboard)
+  listenToActiveOrders(callback) {
+    const q = query(
+      collection(db, "orders"),
+      where("archived", "==", false),
+      orderBy("timestamp", "desc")
+    );
+    return onSnapshot(q, (snapshot) => {
+      const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(orders);
+    }, (error) => {
+      console.error("Firestore dashboard listen error:", error);
+    });
+  },
+
   // Listen for real-time changes (Tracking)
   listenToOrder(orderId, callback, onError) {
     // Sanitización extra: eliminar espacios y normalizar mayúsculas

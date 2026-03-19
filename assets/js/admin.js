@@ -1,4 +1,4 @@
-﻿        import { Store } from './data-manager.js';
+        import { Store } from './data-manager.js';
 
         const statuses = ['Recibido', 'Preparaci├│n', 'Al Horno', 'En Despacho'];
 
@@ -802,15 +802,27 @@
         });
 
         // --- INITIALIZATION & AUTH STATE ---
+        let activeOrdersListener = null;
+
         Store.auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('login-overlay').style.display = 'none';
-                renderOrders();
+                
+                // Real-time listen instead of single calls
+                if (activeOrdersListener) activeOrdersListener(); // Unsubscribe if exists
+                activeOrdersListener = Store.listenToActiveOrders((orders) => {
+                    // Inject orders into a custom call or reuse renderOrders
+                    // We need to modify renderOrders to accept data or just call it
+                    renderOrders(); 
+                });
+
                 renderAdminMenu();
                 renderOffersAdmin();
                 renderReports();
                 renderSystemSettings();
             } else {
+                if (activeOrdersListener) activeOrdersListener();
+                activeOrdersListener = null;
                 document.getElementById('login-overlay').style.display = 'flex';
             }
         });
