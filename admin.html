@@ -7,12 +7,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/png" href="https://i.ibb.co/bn1n6yp/Pizza-removebg-preview.png">
+    <link rel="icon" type="image/png" href="https://i.ibb.co/RpdWLQh9/Gemini-Generated-Image-mr53vomr53vomr53-removebg-preview.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --sidebar-w: 260px;
-            --accent-glow: rgba(0, 140, 69, 0.3);
+            --it-red: #CE2B37;
+            --it-green: #008C45;
+            --it-white: #F4F5F0;
+            --border: rgba(206,43,55,0.2);
+            --font-display: 'Bebas Neue', sans-serif;
+            --font-mono: 'Space Mono', monospace;
         }
         
         html, body {
@@ -376,7 +381,7 @@
                 display: flex !important;
                 align-items: center; justify-content: center;
                 position: fixed; 
-                top: 15px; left: 15px; /* Moved to LEFT to avoid clashing with header buttons */
+                top: 15px; right: 15px; /* Moved to RIGHT */
                 width: 45px; height: 45px; border-radius: 6px;
                 background: var(--it-green); color: #fff;
                 z-index: 2500; border: none;
@@ -513,9 +518,9 @@
     <button class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
 
     <aside id="sidebar">
-        <div class="sidebar-logo">
+        <a href="pizza-landing.html" class="sidebar-logo" style="text-decoration:none; display:block; color:#fff;">
             <span>ONLY</span>PIZZA
-        </div>
+        </a>
         <ul class="admin-nav">
             <li><a onclick="switchTab('dashboard')" id="nav-dashboard" class="active"><i class="fas fa-th-large"></i> PANEL</a></li>
             <li><a onclick="switchTab('content')" id="nav-content"><i class="fas fa-pizza-slice"></i> CONTENIDO</a></li>
@@ -946,9 +951,11 @@
             if (tab === 'content') renderAdminMenu();
             if (tab === 'reports') renderReports();
             
-            // Auto-close sidebar on mobile after selection
+            // Auto-close sidebar and CLEAR BLUR on mobile after selection
             if (window.innerWidth <= 900) {
                 document.getElementById('sidebar').classList.remove('open');
+                const overlay = document.getElementById('sidebar-overlay');
+                if (overlay) overlay.remove();
             }
         };
 
@@ -1294,7 +1301,7 @@
             }
         };
 
-        function toggleSidebar() {
+        window.toggleSidebar = function() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('open');
             
