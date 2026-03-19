@@ -139,7 +139,7 @@ function generateWhatsAppLink(orderData = {}) {
     return acc;
   }, {});
 
-  const { name = '', deliveryType = 'Despacho', address = '', payment = 'Transferencia' } = orderData;
+  const { name = '', deliveryType = 'Despacho', address = '', payment = 'Transferencia', notes = '' } = orderData;
 
   let message = `¡Hola! Quiero realizar un pedido 🍕\n`;
   if (name) message += `👤 *${name.toUpperCase()}*\n`;
@@ -154,7 +154,8 @@ function generateWhatsAppLink(orderData = {}) {
   message += `\n🚚 *Entrega: ${deliveryType}*`;
   if (deliveryType === 'Despacho' && address) message += `\n📍 *Dirección: ${address}*`;
   message += `\n💳 *Pago: ${payment}*`;
-  message += `\n\n¿Me confirman el tiempo de entrega? 🙏`;
+  if (notes) message += `\n\n📝 *Notas: ${notes}*\n`;
+  message += `\n¿Me confirman el tiempo de entrega? 🙏`;
 
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
 }
@@ -364,17 +365,57 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOrderModal(); });
 
   // Confirm: build link and open WhatsApp
-  omConfirmBtn.addEventListener('click', () => {
+  omConfirmBtn.addEventListener('click', async () => {
+    const originalText = omConfirmBtn.textContent;
+    omConfirmBtn.disabled = true;
+    omConfirmBtn.textContent = 'PROCESANDO...';
+
+    const notesValue = document.getElementById('om-notes').value.trim();
     const orderData = {
       name: omNameInput.value.trim(),
       deliveryType: omDeliveryType,
       address: omAddrInput.value.trim(),
-      payment: omPayment
+      payment: omPayment,
+      notes: notesValue
     };
-    const link = generateWhatsAppLink(orderData);
-    if (link !== '#') {
-      closeOrderModal();
-      window.open(link, '_blank');
+
+    try {
+      // 1. Construct detailed string for Firebase (compatibility with admin panel)
+      const grouped = cart.reduce((acc, item) => {
+        acc[item.name] = (acc[item.name] || 0) + 1;
+        return acc;
+      }, {});
+      const details = Object.entries(grouped).map(([n, q]) => `${q}x ${n}`).join(', ');
+      const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+      // 2. Save to Firestore
+      const savedOrder = await Store.addOrder({
+        customer: orderData.name || 'CLIENTE WEB',
+        details: details,
+        total: total,
+        type: orderData.deliveryType,
+        payment: orderData.payment,
+        address: orderData.address,
+        notes: orderData.notes, // New field
+        timestamp: new Date().toISOString()
+      });
+
+      // 3. Generate Link (maybe include order number)
+      const link = generateWhatsAppLink(orderData);
+      
+      if (link !== '#') {
+        // Clear cart and close modal
+        cart = [];
+        updateCartUI();
+        closeOrderModal();
+        window.open(link, '_blank');
+      }
+    } catch (err) {
+      console.error("Error al registrar pedido:", err);
+      alert("Hubo un error al procesar tu pedido. Por favor intenta de nuevo.");
+    } finally {
+      omConfirmBtn.disabled = false;
+      omConfirmBtn.textContent = originalText;
     }
   });
 

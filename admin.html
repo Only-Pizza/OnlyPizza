@@ -618,6 +618,10 @@
                             <textarea id="order-details" required placeholder="EJ: 2X PEPPERONI, 1X MARGHERITA"></textarea>
                         </div>
                         <div class="field-group">
+                            <label>Observaciones / Notas (Opcional)</label>
+                            <textarea id="order-notes" placeholder="EJ: SIN AJÍ, EXTRA QUESO, TOCAR TIMBRE FUERTE..."></textarea>
+                        </div>
+                        <div class="field-group">
                             <label>Total (CLP)</label>
                             <input type="text" id="order-total" required placeholder="EJ: 25.000" oninput="formatCLPInput(this)">
                         </div>
@@ -994,6 +998,7 @@
                                 <span style="color:var(--it-white); font-weight:700; font-family:var(--font-mono); font-size:1.2rem;">$${(order.total || 0).toLocaleString()}</span>
                             </div>
                             <div style="color:rgba(255,255,255,0.7); margin-top: 5px; font-size: 0.9rem;">${order.details}</div>
+                            ${order.notes ? `<div style="color:var(--it-green); margin-top: 5px; font-size: 0.8rem; font-family:var(--font-mono); border-left: 2px solid var(--it-green); padding-left: 8px;">📝 NOTAS: ${order.notes}</div>` : ''}
                             
                             <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.8rem; font-family: var(--font-mono);">
                                 <div title="Tipo de Entrega"><i class="fas fa-${order.type === 'Retiro' ? 'store' : 'truck'}"></i> ${order.type || 'N/A'}</div>
@@ -1064,7 +1069,8 @@
                     type: document.getElementById('order-type').value,
                     payment: document.getElementById('order-payment').value,
                     address: document.getElementById('customer-address').value || '',
-                    customerWhatsapp: document.getElementById('customer-whatsapp').value
+                    customerWhatsapp: document.getElementById('customer-whatsapp').value,
+                    notes: document.getElementById('order-notes').value.trim()
                 };
 
                 const savedOrder = await Store.addOrder(orderData);
