@@ -1004,21 +1004,28 @@
                         <span class="status-badge status-${order.status.replace(' ', '_')}">${order.status}</span>
                     </div>
                         </div>
-                        <div class="status-footer" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; display: flex; gap: 0.8rem; align-items: center;">
-                            <div class="status-buttons" style="flex: 1;">
+                        <div class="status-footer" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
+                            <div class="status-buttons" style="flex: 1; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 ${statuses.map(s => `
                                     <button class="status-btn ${order.status === s ? 'active' : ''}" 
                                             data-id="${order.id}" data-status="${s}">${s}</button>
                                 `).join('')}
                             </div>
                             
-                            ${order.status === 'En Despacho' || order.status === 'Entregada' ? `
-                                <button class="status-btn ${order.status === 'Entregada' ? 'active' : ''}" 
-                                        style="${order.status === 'Entregada' ? 'background: #27ae60;' : 'border-color: #27ae60; color: #27ae60;'}"
-                                        data-id="${order.id}" data-status="Entregada">
-                                    <i class="fas fa-check-double"></i> ENTREGADA
+                            <div style="display:flex; gap:0.5rem;">
+                                <button class="status-btn" style="border-color: #25D366; color: #25D366;" 
+                                        onclick="window.shareTracking('${order.orderNumber}', '${order.customer}', '${order.customerWhatsapp || ''}')">
+                                    <i class="fab fa-whatsapp"></i> COMPARTIR
                                 </button>
-                            ` : ''}
+
+                                ${order.status === 'En Despacho' || order.status === 'Entregada' ? `
+                                    <button class="status-btn ${order.status === 'Entregada' ? 'active' : ''}" 
+                                            style="${order.status === 'Entregada' ? 'background: #27ae60;' : 'border-color: #27ae60; color: #27ae60;'}"
+                                            data-id="${order.id}" data-status="Entregada">
+                                        <i class="fas fa-check-double"></i> ENTREGADA
+                                    </button>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1318,6 +1325,21 @@
             }
         }
 ;
+
+        window.shareTracking = async function(orderNumber, customer, whatsapp) {
+            const cleanPhone = whatsapp.replace(/\D/g, '');
+            const settings = await Store.getSettings();
+            const storeName = (settings.store && settings.store.name) || "Only Pizza";
+            const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${orderNumber}`;
+            
+            const text = encodeURIComponent(`*¡Hola ${customer}!* 🍕 Tu pedido *${orderNumber}* en *${storeName}* ya está registrado.\n\n*Sigue tu pedido en vivo aquí:*\n${trackingUrl}`);
+            
+            if (cleanPhone) {
+                window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
+            } else {
+                window.open(`https://wa.me/?text=${text}`, '_blank');
+            }
+        };
 
         // --- SIDEBAR IMPROVEMENTS ---
         document.addEventListener('click', (e) => {
