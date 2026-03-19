@@ -260,12 +260,11 @@
                         const settings = await Store.getSettings();
                         const storeName = (settings.store && settings.store.name) || "Only Pizza";
                         const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${order.orderNumber}`;
-                        const pizzaEmoji = String.fromCodePoint(0x1F355);
-                        const clockEmoji = String.fromCodePoint(0x23F3);
                         
-                        let rawText = "*\u00a1Hola " + order.customer + "!* " + pizzaEmoji + " Tu pedido *" + order.orderNumber + "* en *" + storeName + "* ha sido aceptado.\n\n";
+                        // NO EMOJIS, as they are failing on user device for this specific message
+                        let rawText = "¡Hola " + order.customer + "! Tu pedido " + order.orderNumber + " en " + storeName + " ha sido aceptado.\n\n";
                         if (estimatedTime) {
-                            rawText += clockEmoji + " *Tiempo estimado:* " + estimatedTime + "\n\n";
+                            rawText += "- Tiempo estimado: " + estimatedTime + "\n\n";
                         }
                         rawText += "*Sigue tu pedido en vivo aqui:*\n" + trackingUrl;
                         
@@ -314,9 +313,8 @@
                                 const settings = await Store.getSettings();
                                 const storeName = (settings.store && settings.store.name) || "Only Pizza";
                                 const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${savedOrder.orderNumber}`;
-                                const pizzaEmoji = String.fromCodePoint(0x1F355);
                                 
-                                const rawText = "*\u00a1Hola " + orderData.customer + "!* " + pizzaEmoji + " Tu pedido *" + savedOrder.orderNumber + "* en *" + storeName + "* ha sido registrado.\n\n*Tipo:* " + orderData.type + "\n*Total:* $" + orderData.total.toLocaleString() + " CLP\n\n*Sigue tu pedido aqui:*\n" + trackingUrl;
+                                const rawText = "¡Hola " + orderData.customer + "! Tu pedido " + savedOrder.orderNumber + " en " + storeName + " ha sido registrado.\n\nTipo: " + orderData.type + "\nTotal: $" + orderData.total.toLocaleString() + " CLP\n\n*Sigue tu pedido aqui:*\n" + trackingUrl;
                                 const text = encodeURIComponent(rawText);
                                 
                                 window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
@@ -573,14 +571,12 @@
                 String.fromCodePoint(0x1F4F2) + " COMPARTIR SEGUIMIENTO",
                 `Compartiendo link con ${customer}. Ingresa el tiempo estimado (opcional):`,
                 (estimatedTime) => {
-                    const pizzaEmoji = String.fromCodePoint(0x1F355);
-                    const clockEmoji = String.fromCodePoint(0x23F3);
-                    
-                    let rawText = "*\u00a1Hola " + customer + "!* " + pizzaEmoji + " Tu pedido *" + orderNumber + "* en *" + storeName + "* ya est\u00e1 registrado.\n\n";
+                    const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${orderNumber}`;
+                    let rawText = "¡Hola " + customer + "! Tu pedido " + orderNumber + " en " + storeName + " ya está registrado.\n\n";
                     if (estimatedTime) {
-                        rawText += clockEmoji + " *Tiempo estimado:* " + estimatedTime + "\n\n";
+                        rawText += "- Tiempo estimado: " + estimatedTime + "\n\n";
                     }
-                    rawText += "*Sigue tu pedido en vivo aqu\u00ed:*\n" + trackingUrl;
+                    rawText += "*Sigue tu pedido en vivo aquí:*\n" + trackingUrl;
                     
                     const text = encodeURIComponent(rawText);
                     
@@ -938,7 +934,7 @@
         // --- INITIALIZATION & AUTH STATE ---
         let activeOrdersListener = null;
 
-        console.log("Admin Loaded: v1.0.11 - Estimated Time Feature Added");
+        console.log("Admin Loaded: v1.0.12 - Removed WhatsApp Emojis in Admin");
         Store.auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('login-overlay').style.display = 'none';
