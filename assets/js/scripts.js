@@ -141,8 +141,17 @@ function generateWhatsAppLink(orderData = {}) {
 
   const { name = '', deliveryType = 'Despacho', address = '', payment = 'Transferencia', notes = '' } = orderData;
 
-  let message = `\u00A1Hola! Quiero realizar un pedido \uD83C\uDF55\n`;
-  if (name) message += `\uD83D\uDC64 *${name.toUpperCase()}*\n`;
+  const pizza = String.fromCodePoint(0x1F355);
+  const user = String.fromCodePoint(0x1F464);
+  const money = String.fromCodePoint(0x1F4B0);
+  const truck = String.fromCodePoint(0x1F69A);
+  const pin = String.fromCodePoint(0x1F4CD);
+  const card = String.fromCodePoint(0x1F4B3);
+  const notesIcon = String.fromCodePoint(0x1F4DD);
+  const pray = String.fromCodePoint(0x1F64F);
+
+  let message = `\u00A1Hola! Quiero realizar un pedido ${pizza}\n`;
+  if (name) message += `${user} *${name.toUpperCase()}*\n`;
   message += `\n`;
 
   for (const [pizzaName, qty] of Object.entries(grouped)) {
@@ -150,12 +159,12 @@ function generateWhatsAppLink(orderData = {}) {
   }
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
-  message += `\n\uD83D\uDCB0 *Total: $${total.toLocaleString('es-CL')} CLP*`;
-  message += `\n\uD83D\uDE9A *Entrega: ${deliveryType}*`;
-  if (deliveryType === 'Despacho' && address) message += `\n\uD83D\uDCCD *Direcci\u00f3n: ${address}*`;
-  message += `\n\uD83D\uDCB3 *Pago: ${payment}*`;
-  if (notes) message += `\n\n\uD83D\uDCDD *Notas: ${notes}*\n`;
-  message += `\n\u00bfMe confirman el tiempo de entrega? \uD83D\uDE4F`;
+  message += `\n${money} *Total: $${total.toLocaleString('es-CL')} CLP*`;
+  message += `\n${truck} *Entrega: ${deliveryType}*`;
+  if (deliveryType === 'Despacho' && address) message += `\n${pin} *Direcci\u00f3n: ${address}*`;
+  message += `\n${card} *Pago: ${payment}*`;
+  if (notes) message += `\n\n${notesIcon} *Notas: ${notes}*\n`;
+  message += `\n\u00bfMe confirman el tiempo de entrega? ${pray}`;
 
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
 }

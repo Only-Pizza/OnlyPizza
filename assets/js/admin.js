@@ -173,8 +173,8 @@
                 container.appendChild(div);
             });
 
-            // Re-bind buttons for main list
-            container.querySelectorAll('.status-btn').forEach(btn => {
+            // Re-bind ONLY buttons for status updates (those with data-status)
+            container.querySelectorAll('.status-btn[data-status]').forEach(btn => {
                 btn.onclick = async () => { await updateStatus(btn.dataset.id, btn.dataset.status); };
             });
         }
@@ -207,7 +207,7 @@
                             </div>
                             <span class="order-customer" style="font-size: 1.3rem;">${order.customer}</span>
                             <div style="color:var(--it-white); margin-top: 5px; font-size: 1rem; border-left: 2px solid var(--it-green); padding-left: 10px; background: rgba(0,0,0,0.2); padding: 0.5rem;">${order.details}</div>
-                            ${order.notes ? `<div style="color:var(--it-green); font-size:0.85rem; margin-top:5px; font-family:var(--font-mono)">\uD83D\uDCDD NOTAS: ${order.notes}</div>` : ''}
+                            ${order.notes ? `<div style="color:var(--it-green); font-size:0.85rem; margin-top:5px; font-family:var(--font-mono)">${String.fromCodePoint(0x1F4DD)} NOTAS: ${order.notes}</div>` : ''}
                             <div style="margin-top: 8px; font-weight:700; color:var(--it-white); font-family:var(--font-mono); font-size: 1.2rem;">TOTAL: $${(order.total || 0).toLocaleString()}</div>
                         </div>
                         <div style="margin-left: 2rem;">
@@ -237,13 +237,14 @@
                 const cleanPhone = (order.customerWhatsapp || '').replace(/\D/g, '');
                 
                 confirmAction(
-                    "\uD83D\uDCF2 \u00BFENVIAR SEGUIMIENTO?",
-                    `\u00BFDeseas enviar el link de Radar de Seguimiento al cliente ${order.customer}?`,
+                    `${String.fromCodePoint(0x1F4F2)} \u00bfENVIAR SEGUIMIENTO?`,
+                    `\u00bfDeseas enviar el link de Radar de Seguimiento al cliente ${order.customer}?`,
                     async () => {
                         const settings = await Store.getSettings();
                         const storeName = (settings.store && settings.store.name) || "Only Pizza";
                         const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${order.orderNumber}`;
-                        const text = encodeURIComponent(`*\u00a1Hola ${order.customer}!* \uD83C\uDF55 Tu pedido *${order.orderNumber}* en *${storeName}* ha sido aceptado.\n\n*Sigue tu pedido en vivo aqui:*\n${trackingUrl}`);
+                        const pizza = String.fromCodePoint(0x1F355);
+                        const text = encodeURIComponent(`*\u00a1Hola ${order.customer}!* ${pizza} Tu pedido *${order.orderNumber}* en *${storeName}* ha sido aceptado.\n\n*Sigue tu pedido en vivo aqui:*\n${trackingUrl}`);
                         window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
                     },
                     "ENVIAR WHATSAPP"
@@ -538,7 +539,8 @@
             const storeName = (settings.store && settings.store.name) || "Only Pizza";
             const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${orderNumber}`;
             
-            const text = encodeURIComponent(`*\u00a1Hola ${customer}!* \uD83C\uDF55 Tu pedido *${orderNumber}* en *${storeName}* ya est\u00e1 registrado.\n\n*Sigue tu pedido en vivo aqu\u00ed:*\n${trackingUrl}`);
+            const pizza = String.fromCodePoint(0x1F355);
+            const text = encodeURIComponent(`*\u00a1Hola ${customer}!* ${pizza} Tu pedido *${orderNumber}* en *${storeName}* ya est\u00e1 registrado.\n\n*Sigue tu pedido en vivo aqu\u00ed:*\n${trackingUrl}`);
             
             if (cleanPhone) {
                 window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
