@@ -348,6 +348,13 @@
         <div class="modal-box">
             <div class="modal-title">¿ESTÁS SEGURO?</div>
             <div class="modal-desc" id="modal-desc">Esta acción no se puede deshacer.</div>
+            
+            <!-- Campo opcional para tiempo estimado -->
+            <div id="modal-input-container" style="display:none; margin-top: 1.5rem; text-align: left;">
+                <label style="display:block; font-family:var(--font-mono); font-size:0.7rem; color:var(--muted); margin-bottom:0.5rem;">TIEMPO ESTIMADO (EJ: 30-45 MIN)</label>
+                <input type="text" id="modal-input" placeholder="EJ: 30-45 MIN" style="width:100%; background:#000; border:1px solid rgba(255,255,255,0.2); color:#fff; padding:0.8rem; font-family:var(--font-mono); outline:none;">
+            </div>
+
             <div class="modal-actions">
                 <button class="modal-btn cancel" id="modal-cancel">CANCELAR</button>
                 <button class="modal-btn confirm" id="modal-confirm">ELIMINAR PRODUCTO</button>
@@ -402,6 +409,7 @@
         </div>
     </div>
 
-    <script type="module" src="assets/js/admin.js?v=2"></script>
+    <div style="position:fixed; bottom:10px; right:10px; font-size:0.6rem; color:rgba(255,255,255,0.2); font-family:var(--font-mono); z-index:9999;">v1.0.10</div>
+    <script type="module" src="assets/js/admin.js?v=10"></script>
 </body>
 </html>

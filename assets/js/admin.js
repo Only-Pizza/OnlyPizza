@@ -29,20 +29,37 @@
         };
 
         // --- CUSTOM MODAL ---
-        window.confirmAction = function(title, desc, onConfirm, confirmText = 'CONFIRMAR') {
+        window.confirmAction = function(title, desc, onConfirm, confirmText = 'CONFIRMAR', showInput = false) {
             const modal = document.getElementById('custom-modal');
             const confirmBtn = document.getElementById('modal-confirm');
             const cancelBtn = document.getElementById('modal-cancel');
+            const inputContainer = document.getElementById('modal-input-container');
+            const inputField = document.getElementById('modal-input');
             
             document.querySelector('.modal-title').textContent = title;
             document.getElementById('modal-desc').textContent = desc;
             confirmBtn.textContent = confirmText;
             
+            if (showInput) {
+                inputContainer.style.display = 'block';
+                inputField.value = '';
+                setTimeout(() => inputField.focus(), 50);
+            } else {
+                inputContainer.style.display = 'none';
+            }
+            
             modal.style.display = 'flex';
             
-            const close = () => modal.style.display = 'none';
+            const close = () => {
+                modal.style.display = 'none';
+                inputContainer.style.display = 'none';
+            };
             
-            confirmBtn.onclick = () => { close(); onConfirm(); };
+            confirmBtn.onclick = () => { 
+                const val = inputField.value;
+                close(); 
+                onConfirm(val); 
+            };
             cancelBtn.onclick = close;
         };
 
@@ -237,17 +254,26 @@
                 const cleanPhone = (order.customerWhatsapp || '').replace(/\D/g, '');
                 
                 confirmAction(
-                    `${String.fromCodePoint(0x1F4F2)} \u00bfENVIAR SEGUIMIENTO?`,
-                    `\u00bfDeseas enviar el link de Radar de Seguimiento al cliente ${order.customer}?`,
-                    async () => {
+                    String.fromCodePoint(0x1F4F2) + " \u00bfENVIAR SEGUIMIENTO?",
+                    `\u00bfDeseas enviar el link de Radar de Seguimiento al cliente ${order.customer}? Ingresa el tiempo estimado:`,
+                    async (estimatedTime) => {
                         const settings = await Store.getSettings();
                         const storeName = (settings.store && settings.store.name) || "Only Pizza";
                         const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${order.orderNumber}`;
-                        const pizza = String.fromCodePoint(0x1F355);
-                        const text = encodeURIComponent(`*\u00a1Hola ${order.customer}!* ${pizza} Tu pedido *${order.orderNumber}* en *${storeName}* ha sido aceptado.\n\n*Sigue tu pedido en vivo aqui:*\n${trackingUrl}`);
+                        const pizzaEmoji = String.fromCodePoint(0x1F355);
+                        const clockEmoji = String.fromCodePoint(0x23F3);
+                        
+                        let rawText = "*\u00a1Hola " + order.customer + "!* " + pizzaEmoji + " Tu pedido *" + order.orderNumber + "* en *" + storeName + "* ha sido aceptado.\n\n";
+                        if (estimatedTime) {
+                            rawText += clockEmoji + " *Tiempo estimado:* " + estimatedTime + "\n\n";
+                        }
+                        rawText += "*Sigue tu pedido en vivo aqui:*\n" + trackingUrl;
+                        
+                        const text = encodeURIComponent(rawText);
                         window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
                     },
-                    "ENVIAR WHATSAPP"
+                    "ENVIAR WHATSAPP",
+                    true // Show input
                 );
 
                 renderOrders();
@@ -288,7 +314,11 @@
                                 const settings = await Store.getSettings();
                                 const storeName = (settings.store && settings.store.name) || "Only Pizza";
                                 const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${savedOrder.orderNumber}`;
-                                const text = encodeURIComponent(`*\u00a1Hola ${orderData.customer}!* Tu pedido *${savedOrder.orderNumber}* en *${storeName}* ha sido registrado.\n\n*Tipo:* ${orderData.type}\n*Total:* $${orderData.total.toLocaleString()} CLP\n\n*Sigue tu pedido aqui:*\n${trackingUrl}`);
+                                const pizzaEmoji = String.fromCodePoint(0x1F355);
+                                
+                                const rawText = "*\u00a1Hola " + orderData.customer + "!* " + pizzaEmoji + " Tu pedido *" + savedOrder.orderNumber + "* en *" + storeName + "* ha sido registrado.\n\n*Tipo:* " + orderData.type + "\n*Total:* $" + orderData.total.toLocaleString() + " CLP\n\n*Sigue tu pedido aqui:*\n" + trackingUrl;
+                                const text = encodeURIComponent(rawText);
+                                
                                 window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
                             },
                             "ENVIAR WHATSAPP"
@@ -539,14 +569,30 @@
             const storeName = (settings.store && settings.store.name) || "Only Pizza";
             const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${orderNumber}`;
             
-            const pizza = String.fromCodePoint(0x1F355);
-            const text = encodeURIComponent(`*\u00a1Hola ${customer}!* ${pizza} Tu pedido *${orderNumber}* en *${storeName}* ya est\u00e1 registrado.\n\n*Sigue tu pedido en vivo aqu\u00ed:*\n${trackingUrl}`);
-            
-            if (cleanPhone) {
-                window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
-            } else {
-                window.open(`https://wa.me/?text=${text}`, '_blank');
-            }
+            confirmAction(
+                String.fromCodePoint(0x1F4F2) + " COMPARTIR SEGUIMIENTO",
+                `Compartiendo link con ${customer}. Ingresa el tiempo estimado (opcional):`,
+                (estimatedTime) => {
+                    const pizzaEmoji = String.fromCodePoint(0x1F355);
+                    const clockEmoji = String.fromCodePoint(0x23F3);
+                    
+                    let rawText = "*\u00a1Hola " + customer + "!* " + pizzaEmoji + " Tu pedido *" + orderNumber + "* en *" + storeName + "* ya est\u00e1 registrado.\n\n";
+                    if (estimatedTime) {
+                        rawText += clockEmoji + " *Tiempo estimado:* " + estimatedTime + "\n\n";
+                    }
+                    rawText += "*Sigue tu pedido en vivo aqu\u00ed:*\n" + trackingUrl;
+                    
+                    const text = encodeURIComponent(rawText);
+                    
+                    if (cleanPhone) {
+                        window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
+                    } else {
+                        window.open(`https://wa.me/?text=${text}`, '_blank');
+                    }
+                },
+                "COMPARTIR",
+                true // Show input
+            );
         };
 
         // --- SIDEBAR IMPROVEMENTS ---
@@ -892,6 +938,7 @@
         // --- INITIALIZATION & AUTH STATE ---
         let activeOrdersListener = null;
 
+        console.log("Admin Loaded: v1.0.11 - Estimated Time Feature Added");
         Store.auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('login-overlay').style.display = 'none';
