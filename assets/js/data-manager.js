@@ -133,8 +133,9 @@ const DB = {
       ...order,
       orderNumber: 'OP-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
       timestamp: new Date().toISOString(),
-      status: 'Recibido',
-      archived: false // Default to not archived
+      status: order.status || 'Recibido',
+      archived: false,
+      isNew: order.isNew !== undefined ? order.isNew : true // Default to true if not specified (Web Orders)
     };
     const docRef = await addDoc(collection(db, "orders"), newOrder);
     return { ...newOrder, id: docRef.id };
@@ -143,6 +144,11 @@ const DB = {
   async updateOrderStatus(id, status) {
     const orderRef = doc(db, "orders", id);
     await updateDoc(orderRef, { status });
+  },
+
+  async acceptOrder(id) {
+    const orderRef = doc(db, "orders", id);
+    await updateDoc(orderRef, { isNew: false });
   },
 
   // Listen for all active orders (Dashboard)
@@ -162,7 +168,7 @@ const DB = {
 
   // Listen for real-time changes (Tracking)
   listenToOrder(orderId, callback, onError) {
-    // Sanitización extra: eliminar espacios y normalizar mayúsculas
+    // Sanitizaci\u00f3n extra: eliminar espacios y normalizar may\u00fasculas
     const sanitizedId = orderId.trim().toUpperCase().replace(/\s+/g, '').replace(/[\u2013\u2014]/g, '-');
     
     // Try by OrderNumber

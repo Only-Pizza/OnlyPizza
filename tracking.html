@@ -127,7 +127,7 @@
         }
 
         .step-label {
-            position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
             font-family: var(--font-mono); font-size: 0.9rem; color: var(--muted);
             white-space: nowrap; text-transform: uppercase;
         }
@@ -192,6 +192,7 @@
             .step-label {
                 left: 35px;
                 top: 50%;
+                bottom: auto;
                 transform: translateY(-50%);
                 text-align: left;
                 width: 150px;
@@ -234,14 +235,13 @@
                 <div class="progress-bar" id="progress-bar"></div>
                 <div class="status-points">
                     <div class="status-point" id="pt-0"><span class="step-label">Recibido</span></div>
-                    <div class="status-point" id="pt-1"><span class="step-label">Preparación</span></div>
+                    <div class="status-point" id="pt-1"><span class="step-label">Preparaci&oacute;n</span></div>
                     <div class="status-point" id="pt-2"><span class="step-label">Al Horno</span></div>
-                    <div class="status-point" id="pt-3"><span class="step-label">Listo</span></div>
-                    <div class="status-point" id="pt-4"><span class="step-label">En Despacho</span></div>
+                    <div class="status-point" id="pt-3"><span class="step-label">En Despacho</span></div>
                 </div>
             </div>
 
-            <p class="order-meta" style="text-align:center; margin-top: 2rem;">Estimado cliente, su pedido está siendo procesado con tecnología de vanguardia.</p>
+            <p class="order-meta" style="text-align:center; margin-top: 2rem;">Estimado cliente, su pedido est&aacute; siendo procesado con tecnolog&iacute;a de vanguardia.</p>
         </div>
 
         <div id="error-msg" style="display:none; color: var(--it-red); font-family: var(--font-mono); margin-top: 2rem; font-size: 0.8rem;">
@@ -253,7 +253,7 @@
     <script type="module">
         import { Store } from './assets/js/data-manager.js?v=4';
 
-        const statuses = ['Recibido', 'Preparación', 'Al Horno', 'Listo', 'En Despacho'];
+        const statuses = ['Recibido', 'Preparaci\u00f3n', 'Al Horno', 'En Despacho'];
         let currentUnsubscribe = null;
         
         window.trackOrder = function() {
@@ -290,9 +290,16 @@
                     error.style.display = 'none';
                     
                     document.getElementById('current-status').textContent = order.status.toUpperCase();
-                    document.getElementById('order-info').textContent = `SESIÓN: ${order.customer} // HORA CHILE: ${Store.formatTime(order.timestamp)}`;
+                    document.getElementById('order-info').textContent = `SESIÓN: ${order.customer} // HORA: ${Store.formatTime(order.timestamp)}`;
                     
-                    const statusIndex = statuses.indexOf(order.status);
+                    // Normalización básica para pedidos antiguos con mojibake
+                    let statusIndex = statuses.indexOf(order.status);
+                    if (statusIndex === -1) {
+                        if (order.status.includes('Preparaci')) statusIndex = 1;
+                        else if (order.status.includes('Horno')) statusIndex = 2;
+                        else if (order.status.includes('Despacho')) statusIndex = 4;
+                    }
+
                     const progressWidth = (statusIndex / (statuses.length - 1)) * 100;
                     if (window.innerWidth <= 600) {
                         document.getElementById('progress-bar').style.height = progressWidth + '%';

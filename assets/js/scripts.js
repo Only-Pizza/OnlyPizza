@@ -155,7 +155,7 @@ function generateWhatsAppLink(orderData = {}) {
   if (deliveryType === 'Despacho' && address) message += `\n\u{1F4CD} *Dirección: ${address}*`;
   message += `\n\u{1F4B3} *Pago: ${payment}*`;
   if (notes) message += `\n\n\u{1F4DD} *Notas: ${notes}*\n`;
-  message += `\n¿Me confirman el tiempo de entrega? \u{1F64F}`;
+  message += `\n\u00bfMe confirman el tiempo de entrega? \u1F64F`;
 
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
 }

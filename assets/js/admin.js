@@ -1,6 +1,6 @@
         import { Store } from './data-manager.js';
 
-        const statuses = ['Recibido', 'Preparaci├│n', 'Al Horno', 'En Despacho'];
+        const statuses = ['Recibido', 'Preparaci\u00f3n', 'Al Horno', 'En Despacho'];
 
         // --- PREMIUM NOTIFICATIONS ---
         const Notify = {
@@ -82,10 +82,28 @@
         // --- DASHBOARD: ORDERS ---
         async function renderOrders() {
             const container = document.getElementById('order-history');
+            const incomingContainer = document.getElementById('incoming-orders-list');
+            const incomingSection = document.getElementById('section-incoming');
+            
+            if (!container) return;
             let orders = await Store.getOrders();
 
-            // Special Sorting: "Entregada" orders go to the bottom
-            orders.sort((a, b) => {
+            // Separate Incoming (Web) from Recent (Accepted/Manual)
+            const incomingOrders = orders.filter(o => o.isNew === true);
+            const activeOrders = orders.filter(o => o.isNew !== true);
+
+            // Show/Hide Incoming Section
+            if (incomingSection) {
+                if (incomingOrders.length > 0) {
+                    incomingSection.style.display = 'block';
+                    renderIncomingOrdersList(incomingOrders, incomingContainer);
+                } else {
+                    incomingSection.style.display = 'none';
+                }
+            }
+
+            // Special Sorting for Recent: "Entregada" orders go to the bottom
+            activeOrders.sort((a, b) => {
                 if (a.status === 'Entregada' && b.status !== 'Entregada') return 1;
                 if (a.status !== 'Entregada' && b.status === 'Entregada') return -1;
                 return new Date(b.timestamp) - new Date(a.timestamp);
@@ -93,11 +111,15 @@
 
             container.innerHTML = '';
 
-            document.getElementById('count-pending').textContent = orders.filter(o => o.status === 'Recibido' || o.status === 'Preparaci├│n').length;
-            document.getElementById('count-oven').textContent = orders.filter(o => o.status === 'Al Horno').length;
-            document.getElementById('count-today').textContent = orders.filter(o => o.status !== 'Entregada').length;
+            const countPending = document.getElementById('count-pending');
+            const countOven = document.getElementById('count-oven');
+            const countToday = document.getElementById('count-today');
 
-            orders.forEach(order => {
+            if (countPending) countPending.textContent = orders.filter(o => (o.status === 'Recibido' || o.status === 'Preparación') && o.isNew !== true).length;
+            if (countOven) countOven.textContent = orders.filter(o => o.status === 'Al Horno').length;
+            if (countToday) countToday.textContent = orders.filter(o => o.status !== 'Entregada').length;
+
+            activeOrders.forEach(order => {
                 const div = document.createElement('div');
                 div.className = 'order-row';
                 div.innerHTML = `
@@ -114,6 +136,7 @@
                                 <span style="color:var(--it-white); font-weight:700; font-family:var(--font-mono); font-size:1.2rem;">$${(order.total || 0).toLocaleString()}</span>
                             </div>
                             <div style="color:rgba(255,255,255,0.7); margin-top: 5px; font-size: 0.9rem;">${order.details}</div>
+                            ${order.notes ? `<div style="color:var(--it-green); margin-top: 5px; font-size: 0.8rem; font-family:var(--font-mono); border-left: 2px solid var(--it-green); padding-left: 8px;">📝 NOTAS: ${order.notes}</div>` : ''}
                             
                             <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.8rem; font-family: var(--font-mono);">
                                 <div title="Tipo de Entrega"><i class="fas fa-${order.type === 'Retiro' ? 'store' : 'truck'}"></i> ${order.type || 'N/A'}</div>
@@ -123,7 +146,6 @@
                         </div>
                         <span class="status-badge status-${order.status.replace(' ', '_')}">${order.status}</span>
                     </div>
-                        </div>
                         <div class="status-footer" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
                             <div class="status-buttons" style="flex: 1; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 ${statuses.map(s => `
@@ -147,16 +169,13 @@
                                 ` : ''}
                             </div>
                         </div>
-                    </div>
                 `;
                 container.appendChild(div);
             });
 
-            // Re-bind buttons (standard for module scoping)
+            // Re-bind buttons for main list
             container.querySelectorAll('.status-btn').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    await updateStatus(btn.dataset.id, btn.dataset.status);
-                });
+                btn.onclick = async () => { await updateStatus(btn.dataset.id, btn.dataset.status); };
             });
         }
 
@@ -169,6 +188,73 @@
                 Notify.error("Error al actualizar el pedido.");
             }
         }
+
+        function renderIncomingOrdersList(orders, container) {
+            if (!container) return;
+            container.innerHTML = '';
+            
+            orders.forEach(order => {
+                const div = document.createElement('div');
+                div.className = 'order-row';
+                div.style.background = 'rgba(0, 140, 69, 0.05)';
+                div.style.borderLeft = '4px solid var(--it-green)';
+                div.innerHTML = `
+                    <div class="order-header" style="flex-direction: row; align-items: center;">
+                        <div class="order-meta" style="flex: 1;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 0.3rem;">
+                                <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--it-green); font-weight:700;">[ NUEVO PEDIDO WEB ]</span>
+                                <span style="font-size:0.75rem; color:var(--muted)">${Store.formatTime(order.timestamp)}</span>
+                            </div>
+                            <span class="order-customer" style="font-size: 1.3rem;">${order.customer}</span>
+                            <div style="color:var(--it-white); margin-top: 5px; font-size: 1rem; border-left: 2px solid var(--it-green); padding-left: 10px; background: rgba(0,0,0,0.2); padding: 0.5rem;">${order.details}</div>
+                            ${order.notes ? `<div style="color:var(--it-green); font-size:0.85rem; margin-top:5px; font-family:var(--font-mono)">\uD83D\uDCDD NOTAS: ${order.notes}</div>` : ''}
+                            <div style="margin-top: 8px; font-weight:700; color:var(--it-white); font-family:var(--font-mono); font-size: 1.2rem;">TOTAL: $${(order.total || 0).toLocaleString()}</div>
+                        </div>
+                        <div style="margin-left: 2rem;">
+                            <button class="admin-btn" style="margin:0; padding: 1rem 1.5rem; background: var(--it-green); border:none; box-shadow: 0 4px 15px rgba(0,140,69,0.3);" onclick="window.acceptOrder('${order.id}')">
+                                <i class="fas fa-check"></i> ACEPTAR PEDIDO
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        window.acceptOrder = async function(id) {
+            try {
+                // 1. Mark as not new using the Store method
+                await Store.acceptOrder(id);
+                
+                // Get fresh data to get order details for WhatsApp
+                const orders = await Store.getOrders();
+                const order = orders.find(o => o.id === id);
+                if (!order) return;
+
+                Notify.success("Pedido aceptado exitosamente.");
+                
+                // 2. Offer WhatsApp Tracking Link
+                const cleanPhone = (order.customerWhatsapp || '').replace(/\D/g, '');
+                
+                confirmAction(
+                    "\uD83D\uDCF2 \u00BFENVIAR SEGUIMIENTO?",
+                    `\u00BFDeseas enviar el link de Radar de Seguimiento al cliente ${order.customer}?`,
+                    async () => {
+                        const settings = await Store.getSettings();
+                        const storeName = (settings.store && settings.store.name) || "Only Pizza";
+                        const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${order.orderNumber}`;
+                        const text = encodeURIComponent(`*\u00a1Hola ${order.customer}!* \uD83C\uDF55 Tu pedido *${order.orderNumber}* en *${storeName}* ha sido aceptado.\n\n*Sigue tu pedido en vivo aqui:*\n${trackingUrl}`);
+                        window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
+                    },
+                    "ENVIAR WHATSAPP"
+                );
+
+                renderOrders();
+            } catch (err) {
+                console.error(err);
+                Notify.error("Error al aceptar el pedido.");
+            }
+        };
 
         document.getElementById('order-form').addEventListener('submit', async e => {
             e.preventDefault();
@@ -187,7 +273,7 @@
                     customerWhatsapp: document.getElementById('customer-whatsapp').value
                 };
 
-                const savedOrder = await Store.addOrder(orderData);
+                const savedOrder = await Store.addOrder({ ...orderData, isNew: false });
                 Notify.success(`Pedido ${savedOrder.orderNumber} registrado.`);
                 
                 // WhatsApp Automation
@@ -261,7 +347,7 @@
             const pizzas = await Store.getPizzas();
             
             if (pizzas.length === 0) {
-                container.innerHTML = '<div style="color:var(--muted); padding:2rem; grid-column:1/-1; text-align:center;">// NO HAY PIZZAS EN EL MEN├Ü</div>';
+                container.innerHTML = '<div style="color:var(--muted); padding:2rem; grid-column:1/-1; text-align:center;">// NO HAY PIZZAS EN EL MEN\u00da</div>';
                 return;
             }
 
@@ -282,11 +368,11 @@
                     const name = btn.dataset.name;
                     confirmAction(
                         "ELIMINAR PIZZA", 
-                        `┬┐Est├ís seguro de que quieres eliminar la pizza "${name}"? Esta acci├│n ser├í inmediata.`,
+                        `\u00bfEst\u00e1s seguro de que quieres eliminar la pizza "${name}"? Esta acci\u00f3n ser\u00e1 inmediata.`,
                         async () => {
                             const success = await Store.deletePizza(id);
                             if (success) {
-                                Notify.success("Pizza eliminada con ├®xito.");
+                                Notify.success("Pizza eliminada con \u00e9xito.");
                                 renderAdminMenu();
                             } else {
                                 Notify.error("Error al eliminar la pizza.");
@@ -364,7 +450,7 @@
             try {
                 const success = await Store.updatePizza(id, data, editPhotoFile);
                 if (success) {
-                    Notify.success("Pizza actualizada con ├®xito.");
+                    Notify.success("Pizza actualizada con \u00e9xito.");
                     closeEditModal();
                     renderAdminMenu();
                 } else {
@@ -421,7 +507,7 @@
             if (success) {
                 Notify.success("Acceso concedido.");
             } else {
-                Notify.error("Correo o contrase├▒a incorrectos.");
+                Notify.error("Correo o contrase\u00f1a incorrectos.");
                 document.getElementById('login-error').style.display = 'block';
                 btn.disabled = false;
                 btn.textContent = originalText;
@@ -452,7 +538,7 @@
             const storeName = (settings.store && settings.store.name) || "Only Pizza";
             const trackingUrl = `https://only-pizza.github.io/OnlyPizza/tracking.html?track=${orderNumber}`;
             
-            const text = encodeURIComponent(`*┬íHola ${customer}!* ­ƒìò Tu pedido *${orderNumber}* en *${storeName}* ya est├í registrado.\n\n*Sigue tu pedido en vivo aqu├¡:*\n${trackingUrl}`);
+            const text = encodeURIComponent(`*\u00a1Hola ${customer}!* \uD83C\uDF55 Tu pedido *${orderNumber}* en *${storeName}* ya est\u00e1 registrado.\n\n*Sigue tu pedido en vivo aqu\u00ed:*\n${trackingUrl}`);
             
             if (cleanPhone) {
                 window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
@@ -543,7 +629,7 @@
                     await Store.updateOffer(id, data);
                 }
 
-                Notify.success("Ofertas y configuraci├│n actualizadas.");
+                Notify.success("Ofertas y configuraci\u00f3n actualizadas.");
             } catch (err) {
                 console.error(err);
                 Notify.error("Error al guardar las ofertas.");
@@ -569,7 +655,7 @@
             historyList.innerHTML = '';
             
             if (history.length === 0) {
-                historyList.innerHTML = '<div style="color:var(--muted); font-family:var(--font-mono); text-align:center; padding:2rem;">// NO HAY HISTORIAL DE CIERRES A├ÜN</div>';
+                historyList.innerHTML = '<div style="color:var(--muted); font-family:var(--font-mono); text-align:center; padding:2rem;">// NO HAY HISTORIAL DE CIERRES A\u00daN</div>';
                 revenueHistoric.textContent = '$0';
                 totalDaysElem.textContent = '0';
                 return;
@@ -722,28 +808,28 @@
             btnCloseDay.onclick = () => {
                 const deliveredCount = document.querySelectorAll('.status-badge.status-Entregada').length;
                 if (deliveredCount === 0) {
-                    Notify.info("No hay pedidos entregados para cerrar el d├¡a.");
+                    Notify.info("No hay pedidos entregados para cerrar el d\u00eda.");
                     return;
                 }
 
                 confirmAction(
-                    "┬┐FINALIZAR D├ìA DE VENTAS?",
-                    `Esto archivar├í los ${deliveredCount} pedidos entregados y generar├í un reporte de ventas. Esta acci├│n no se puede deshacer.`,
+                    "\u00bfFINALIZAR D\u00cdA DE VENTAS?",
+                    `Esto archivar\u00e1 los ${deliveredCount} pedidos entregados y generar\u00e1 un reporte de ventas. Esta acci\u00f3n no se puede deshacer.`,
                     async () => {
                         try {
                             const result = await Store.closeDaySales();
                             if (result.success) {
-                                Notify.success(`D├¡a cerrado: $${result.total.toLocaleString()} (${result.count} pedidos)`);
+                                Notify.success(`D\u00eda cerrado: $${result.total.toLocaleString()} (${result.count} pedidos)`);
                                 renderOrders();
                                 renderReports();
                             } else {
                                 Notify.info(result.message);
                             }
                         } catch (err) {
-                            Notify.error("Error al cerrar el d├¡a.");
+                            Notify.error("Error al cerrar el d\u00eda.");
                         }
                     },
-                    "FINALIZAR D├ìA"
+                    "FINALIZAR D\u00cdA"
                 );
             };
         }
@@ -781,7 +867,7 @@
         document.getElementById('btn-save-pass').addEventListener('click', async () => {
             const newPass = document.getElementById('set-admin-pass').value;
             if (!newPass || newPass.length < 6) {
-                Notify.error("La contrase├▒a debe tener al menos 6 caracteres.");
+                Notify.error("La contrase\u00f1a debe tener al menos 6 caracteres.");
                 return;
             }
 
