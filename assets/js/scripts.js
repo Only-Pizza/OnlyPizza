@@ -408,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cart = [];
         updateCartUI();
         closeOrderModal();
-        window.open(link, '_blank');
+        window.location.href = link;
       }
     } catch (err) {
       console.error("Error al registrar pedido:", err);
