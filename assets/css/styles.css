@@ -240,6 +240,7 @@
     position: relative; z-index: 2;
     padding: 0 4rem;
     max-width: 700px;
+    will-change: transform;
   }
 
   .hero-tag {
@@ -325,6 +326,7 @@
     width: 65vw; max-width: 900px;
     aspect-ratio: 1; z-index: 1;
     opacity: 0; animation: heroVisualIn 1.2s 0.5s forwards;
+    will-change: transform;
   }
   @keyframes heroVisualIn { from{opacity:0;transform:translateY(-50%) scale(0.9) rotate(-5deg)} to{opacity:1;transform:translateY(-50%) scale(1) rotate(0)} }
 

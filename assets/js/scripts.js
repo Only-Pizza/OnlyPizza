@@ -288,13 +288,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Parallax
+  // Parallax - Smooth for Desktop only
+  let scrollTicking = false;
   window.addEventListener('scroll', () => {
-    const scrollY = window.scrollY;
-    const heroContent = document.querySelector('.hero-content');
-    const heroVisual = document.querySelector('.hero-visual');
-    if (heroContent) heroContent.style.transform = `translateY(${scrollY * 0.3}px)`;
-    if (heroVisual) heroVisual.style.transform = `translateY(calc(-50% + ${scrollY * 0.15}px))`;
+    if (!scrollTicking && window.innerWidth >= 900) {
+      window.requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        const heroContent = document.querySelector('.hero-content');
+        const heroVisual = document.querySelector('.hero-visual');
+        
+        if (heroContent) heroContent.style.transform = `translateY(${scrollY * 0.3}px)`;
+        if (heroVisual) heroVisual.style.transform = `translateY(calc(-50% + ${scrollY * 0.15}px))`;
+        
+        scrollTicking = false;
+      });
+      scrollTicking = true;
+    }
   });
 
   renderMenu('Todas', getInitialLimit());
