@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuestra Carta | Only Pizza</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/menu-styles.css">
+  <link rel="icon" type="image/png" href="assets/img/Logo.png">
+</head>
+<body class="menu-page">
+
+  <!-- Header -->
+  <header class="menu-header">
+    <a href="index.html" class="back-link">
+      <span>←</span> VOLVER A INICIO
+    </a>
+    
+    <div class="header-center">
+      <img src="assets/img/Logo.png" alt="Only Pizza" class="menu-logo">
+    </div>
+
+    <div class="menu-cart-status" onclick="window.location.href='index.html#menu'">
+      CARRITO <span id="header-cart-count">(0)</span> <span id="header-cart-total">$0</span>
+    </div>
+  </header>
+
+  <!-- Title Section -->
+  <div style="text-align:center; padding: 4rem 2rem 0;">
+    <p style="font-family:var(--font-mono); color:var(--it-green); letter-spacing: 0.3em; margin-bottom: 1rem;">// EXPERIENCIA ARTESANAL</p>
+    <h1 style="font-family:var(--font-display); font-size: clamp(3rem, 8vw, 6rem); color:var(--it-white); line-height: 0.9;">NUESTRA<br>CARTA COMPLETA</h1>
+  </div>
+
+  <!-- Category Nav -->
+  <nav class="category-nav">
+    <a href="#clasicas" class="cat-link">CLÁSICAS</a>
+    <a href="#especiales" class="cat-link">ESPECIALES</a>
+    <a href="#veggie" class="cat-link">VEGGIE</a>
+  </nav>
+
+  <!-- Menu Container -->
+  <main class="menu-container" id="menu-sections-container">
+    <div class="loading-spinner">Cargando nuestra carta...</div>
+  </main>
+
+  <button id="back-to-top" class="back-to-top" aria-label="Volver arriba">↑</button>
+
+  <footer style="padding: 4rem 2rem; border-top: 1px solid var(--border); text-align:center; opacity:0.5;">
+    <p style="font-family:var(--font-mono); font-size: 0.8rem;">&copy; 2026 ONLY PIZZA. TRADICIÓN ITALIANA CON TOQUE FUTURISTA.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="assets/js/menu-scripts.js"></script>
+
+</body>
+</html>

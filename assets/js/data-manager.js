@@ -262,10 +262,9 @@ const DB = {
       // If no offers exist, return defaults but don't save them yet
       if (offers.length === 0) {
         return [
-          { id: 'off1', title: 'COMBO PAREJAS', desc: 'Pide 2 pizzas medianas y paga solo una. Válido de lunes a miércoles, ideal para una noche especial en casa.', tag: 'VÁLIDO LUN–MIÉ', discount: '2X1', featured: true, order: 1 },
-          { id: 'off2', title: 'RETIRO EN LOCAL', desc: 'Descuento exclusivo al retirar en local. Sin costo de despacho adicional.', tag: 'TODO EL MES', discount: '30%', featured: false, order: 2 },
-          { id: 'off3', title: 'BEBIDA + PIZZA', desc: 'Con cualquier pizza XXL te regalamos una bebida de 1.5L. ¡Sin costo!', tag: 'FINES DE SEMANA', discount: 'GRATIS', featured: false, order: 3 },
-          { id: 'off4', title: 'COMBO FAMILIA', desc: '3 pizzas grandes + 2 bebidas 1.5L + postre de la casa por un precio especial. El combo perfecto para reuniones.', tag: '$27.990 CLP', discount: 'COMBO\nFAMILIA', featured: false, order: 4, fullWidth: true }
+          { id: 'off1', title: 'COMBO PAREJAS', desc: 'Pide 2 pizzas medianas y paga solo una. Válido de lunes a miércoles, ideal para una noche especial en casa.', tag: 'VÁLIDO LUN–MIÉ', discount: '2X1', featured: true, order: 1, active: true, image: null },
+          { id: 'off3', title: 'BEBIDA + PIZZA', desc: 'Con cualquier pizza XXL te regalamos una bebida de 1.5L. ¡Sin costo!', tag: 'FINES DE SEMANA', discount: 'GRATIS', featured: false, order: 2, active: true, image: null },
+          { id: 'off4', title: 'COMBO FAMILIA', desc: '3 pizzas grandes + 2 bebidas 1.5L + postre de la casa por un precio especial. El combo perfecto para reuniones.', tag: '$27.990 CLP', discount: 'COMBO\nFAMILIA', featured: false, order: 3, fullWidth: true, active: true, image: null }
         ];
       }
       return offers;

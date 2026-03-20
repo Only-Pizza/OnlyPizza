@@ -432,6 +432,50 @@
     gap: 2.5rem;
   }
 
+  .view-all-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 4rem;
+    width: 100%;
+  }
+
+  .view-all-btn {
+    padding: 1rem 2.5rem;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--it-white);
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  }
+
+  .view-all-btn::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, var(--it-green), var(--it-white), var(--it-red));
+    transform: scaleX(0.7);
+    transition: transform 0.4s;
+  }
+
+  .view-all-btn:hover {
+    background: rgba(255,255,255,0.03);
+    border-color: rgba(255,255,255,0.3);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    color: var(--it-green);
+  }
+
+  .view-all-btn:hover::before {
+    transform: scaleX(1);
+  }
+
   .pizza-card {
     background: var(--panel);
     position: relative; overflow: hidden;
@@ -563,11 +607,14 @@
 
   .offer-card {
     background: var(--panel);
-    padding: 2.5rem;
+    padding: 0; 
     border: 1px solid transparent;
     position: relative; overflow: hidden;
     opacity: 0; transform: scale(0.95);
     transition: opacity 0.6s, transform 0.6s, border-color 0.3s;
+    background-size: cover;
+    background-position: center;
+    display: flex;
   }
   .offer-card.visible { opacity: 1; transform: scale(1); }
   .offer-card:hover { border-color: var(--border); }
@@ -579,6 +626,35 @@
   .offer-card.featured::before {
     content: ''; position: absolute; inset: 0;
     background: radial-gradient(ellipse at top right, rgba(0,140,69,0.15), transparent 60%);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .offer-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    background: rgba(5, 5, 5, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: background 0.3s, backdrop-filter 0.3s;
+  }
+  .offer-card:hover .offer-content {
+    background: rgba(5, 5, 5, 0.2);
+    backdrop-filter: blur(4px);
+  }
+  
+  .offer-card.full-width-layout .offer-content {
+     flex-direction: row;
+     align-items: center;
+     gap: 2.5rem;
+     justify-content: space-between;
   }
 
   .offer-discount {
@@ -634,6 +710,7 @@
     text-align: center; position: relative; z-index: 1;
     opacity: 0; transform: translateY(30px);
     transition: opacity 0.6s, transform 0.6s;
+    display: flex; flex-direction: column; align-items: center;
   }
   .step.visible { opacity: 1; transform: translateY(0); }
   .step:nth-child(2) { transition-delay: 0.15s; }
@@ -648,13 +725,15 @@
     font-family: var(--font-display); font-size: 1.5rem;
     color: var(--it-white);
     background: var(--void);
-    margin: 0 auto 1.5rem;
+    margin-bottom: 1.5rem;
     position: relative;
   }
   .step-num::before {
     content: ''; position: absolute; inset: -4px;
     border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
   }
+
+  .step-content { width: 100%; }
 
   .step-title {
     font-family: var(--font-display); font-size: 1.6rem;
@@ -831,8 +910,16 @@
     .offers-grid { display: flex; flex-direction: column; gap: 2rem; }
     .offer-card { padding: 2rem 1.5rem; width: 100%; }
     .offer-card.featured { grid-row: auto; }
-    .steps-grid { grid-template-columns: 1fr 1fr; }
-    .steps-grid::before { display: none; }
+    .steps-grid { display: flex; flex-direction: column; gap: 1.5rem; }
+    .steps-grid::before { 
+        display: block; width: 2px; height: auto; top: 2rem; bottom: 2rem; left: 45px; 
+        background: linear-gradient(180deg, transparent, var(--it-green), var(--it-white), var(--it-red), transparent);
+    }
+    .step { padding: 1.5rem; gap: 1.5rem; flex-direction: row; text-align: left; transform: translateX(-20px); }
+    .step.visible { transform: translateX(0); }
+    .step-num { width: 50px; height: 50px; font-size: 1.2rem; margin: 0; }
+    .step-title { font-size: 1.3rem; }
+    .step-desc { font-size: 0.95rem; }
     #whatsapp { grid-template-columns: 1fr; gap: 3rem; }
     .wa-visual { order: -1; }
     footer { flex-direction: column; gap: 1.5rem; text-align: center; }
@@ -1086,10 +1173,42 @@
     font-family: var(--font-mono); font-size: 0.78rem;
     color: var(--muted); line-height: 1.8;
   }
-  .om-summary-line { display: flex; justify-content: space-between; }
+  .om-summary-line { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    padding: 0.4rem 0;
+  }
   .om-summary-line.total {
     border-top: 1px solid var(--border); margin-top: 0.4rem;
     padding-top: 0.4rem; color: var(--it-green); font-weight: 700;
+  }
+
+  .om-qty-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-right: 1rem;
+  }
+
+  .om-qty-btn {
+    width: 24px;
+    height: 24px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    color: var(--it-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    font-family: var(--font-mono);
+  }
+
+  .om-qty-btn:hover {
+    background: var(--it-green);
+    color: #fff;
   }
 
   .om-form { display: flex; flex-direction: column; gap: 1.2rem; }

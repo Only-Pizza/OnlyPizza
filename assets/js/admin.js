@@ -326,7 +326,6 @@
 
                 e.target.reset();
                 document.getElementById('customer-whatsapp').value = '+56';
-                toggleAddressField(); // Reset field visibility
                 renderOrders();
             } catch (err) {
                 Notify.error("Error al registrar el pedido.");
@@ -336,22 +335,6 @@
             }
         });
 
-        // Toggle address field based on order type
-        const typeSelect = document.getElementById('order-type');
-        const addressGroup = document.getElementById('address-group');
-        
-        function toggleAddressField() {
-            if (typeSelect.value === 'Retiro') {
-                addressGroup.style.display = 'none';
-                document.getElementById('customer-address').value = '';
-            } else {
-                addressGroup.style.display = 'block';
-            }
-        }
-        
-        typeSelect.addEventListener('change', toggleAddressField);
-        // Run once on init
-        toggleAddressField();
 
         // --- CONTENT: PIZZA EDITOR ---
         let currentPhotoFile = null;
@@ -605,8 +588,39 @@
         });
 
 
-
         // --- OFFERS MANAGEMENT ---
+        window.offerPhotos = {}; // Track files locally before saving
+
+        window.handleOfferPhoto = function(e, index) {
+            const file = e.target.files[0];
+            if (!file) return;
+            window.offerPhotos[index] = file;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const preview = document.getElementById(`off-preview-${index}`);
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+                document.getElementById(`off-empty-${index}`).style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.clearOfferPhoto = async function(index, id) {
+            if (confirm("\u00bfQuitar foto de fondo de esta oferta?")) {
+                const preview = document.getElementById(`off-preview-${index}`);
+                preview.src = '';
+                preview.style.display = 'none';
+                document.getElementById(`off-empty-${index}`).style.display = 'flex';
+                delete window.offerPhotos[index];
+                
+                // Save immediately to DB
+                await Store.updateOffer(id, { image: null });
+                renderOffersAdmin();
+                Notify.success("Foto de fondo eliminada.");
+            }
+        };
+
         async function renderOffersAdmin() {
             const container = document.getElementById('offers-admin-grid');
             const offers = await Store.getOffers();
@@ -618,28 +632,65 @@
 
             container.innerHTML = offers.map((off, i) => `
                 <div class="offer-edit-card" data-index="${i}" data-id="${off.id}">
-                    <h4>TARJETA DE OFERTA #${i+1}</h4>
-                    <div class="admin-form">
-                        <div class="field-group">
-                            <label>Descuento / Badge (Ej: 2X1, 30%, GRATIS)</label>
-                            <input type="text" class="off-discount" value="${off.discount || ''}">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:0.5rem;">
+                        <h4 style="margin:0">TARJETA DE OFERTA #${i+1}</h4>
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <span style="font-family:var(--font-mono); font-size:0.6rem; color: ${off.active !== false ? 'var(--it-green)' : 'var(--muted)'}">ACTIVA:</span>
+                            <label class="switch" style="transform:scale(0.8)">
+                                <input type="checkbox" class="off-active" ${off.active !== false ? 'checked' : ''} onchange="this.previousElementSibling ? null : renderOffersAdmin()">
+                                <span class="slider"></span>
+                            </label>
                         </div>
+                    </div>
+                    
+                    <div class="admin-form" style="display:grid; grid-template-columns: 140px 1fr; gap:1.5rem;">
+                        <!-- Image Column -->
                         <div class="field-group">
-                            <label>T├¡tulo de la Oferta</label>
-                            <input type="text" class="off-title" value="${off.title || ''}">
+                            <label>Fondo</label>
+                            <label class="offer-photo-label" style="height:160px; border:1px dashed var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; position:relative; overflow:hidden; background:rgba(255,255,255,0.02);">
+                                <input type="file" style="display:none" onchange="handleOfferPhoto(event, ${i})" accept="image/*">
+                                <div id="off-empty-${i}" style="text-align:center; padding:1rem; display: ${off.image ? 'none' : 'flex'}; flex-direction:column; align-items:center;">
+                                    <i class="fas fa-image" style="font-size:1.5rem; color:var(--muted); margin-bottom:0.5rem;"></i>
+                                    <span style="font-size:0.6rem; color:var(--muted); text-transform:uppercase;">Subir Imagen</span>
+                                </div>
+                                <img id="off-preview-${i}" 
+                                     src="${off.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}" 
+                                     style="width:100%; height:100%; object-fit:cover; display: ${off.image ? 'block' : 'none'};" 
+                                     onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; this.style.display='none'; document.getElementById('off-empty-${i}').style.display='flex';">
+                                <div class="off-photo-overlay" style="position:absolute; inset:0; background:rgba(0,0,0,0.5); display:none; flex-direction:column; align-items:center; justify-content:center; gap:0.5rem;">
+                                    <i class="fas fa-edit" style="color:white; font-size:1.2rem;"></i>
+                                    <span style="color:white; font-size:0.6rem; font-family:var(--font-mono);">CAMBIAR FOTO</span>
+                                </div>
+                            </label>
+                            ${off.image ? `
+                                <button type="button" class="admin-btn text-danger" style="padding:0.3rem; font-size:0.6rem; margin-top:0.5rem; width:100%;" onclick="clearOfferPhoto(${i}, '${off.id}')">QUITAR FONDO</button>
+                            ` : ''}
                         </div>
-                        <div class="field-group">
-                            <label>Descripci├│n</label>
-                            <textarea class="off-desc" style="height:60px">${off.desc || ''}</textarea>
-                        </div>
-                        <div class="field-group">
-                            <label>Etiqueta de Validez (Ej: TODO EL MES, FINES DE SEMANA)</label>
-                            <input type="text" class="off-tag" value="${off.tag || ''}">
-                        </div>
-                        <div style="display:flex; gap:1rem; align-items:center">
-                            <label style="font-family:var(--font-mono); font-size:0.7rem; color:var(--muted)">DESESTACAR</label>
-                            <input type="checkbox" class="off-featured" ${off.featured ? 'checked' : ''}>
-                            <label style="font-family:var(--font-mono); font-size:0.7rem; color:var(--muted)">DESTACADA (GLOW)</label>
+
+                        <!-- Data Column -->
+                        <div style="display:flex; flex-direction:column; gap:1rem;">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                                <div class="field-group">
+                                    <label>Descuento / Badge</label>
+                                    <input type="text" class="off-discount" value="${off.discount || ''}">
+                                </div>
+                                <div class="field-group">
+                                    <label>Etiqueta Validez</label>
+                                    <input type="text" class="off-tag" value="${off.tag || ''}">
+                                </div>
+                            </div>
+                            <div class="field-group">
+                                <label>T\u00edtulo de la Oferta</label>
+                                <input type="text" class="off-title" value="${off.title || ''}">
+                            </div>
+                            <div class="field-group">
+                                <label>Descripci\u00f3n</label>
+                                <textarea class="off-desc" style="height:60px">${off.desc || ''}</textarea>
+                            </div>
+                            <div style="display:flex; gap:1rem; align-items:center; margin-top:0.5rem;">
+                                <label style="font-family:var(--font-mono); font-size:0.7rem; color:var(--muted)">DESTACADA (GLOW)</label>
+                                <input type="checkbox" class="off-featured" ${off.featured ? 'checked' : ''}>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -653,27 +704,42 @@
             btn.textContent = 'GUARDANDO...';
 
             try {
-                // 1. Update Settings
+                // 1. Update Global Settings
                 const offersEnabled = document.getElementById('toggle-offers').checked;
                 await Store.updateSetting('landing', { offersEnabled });
 
                 // 2. Update Offers
                 const cards = document.querySelectorAll('.offer-edit-card');
+                const { uploadToImgBB } = await import('./data-manager.js');
+
                 for (const card of cards) {
                     const id = card.dataset.id;
+                    const index = card.dataset.index;
+                    
+                    let imageUrl = card.querySelector(`#off-preview-${index}`).src;
+                    
+                    // If a new photo was selected, upload it
+                    if (window.offerPhotos[index]) {
+                        const uploaded = await uploadToImgBB(window.offerPhotos[index]);
+                        if (uploaded) imageUrl = uploaded;
+                    }
+
                     const data = {
                         discount: card.querySelector('.off-discount').value,
                         title: card.querySelector('.off-title').value,
                         desc: card.querySelector('.off-desc').value,
                         tag: card.querySelector('.off-tag').value,
                         featured: card.querySelector('.off-featured').checked,
-                        // Maintain original layout properties
-                        order: parseInt(card.dataset.index) + 1
+                        active: card.querySelector('.off-active').checked,
+                        image: imageUrl || null,
+                        order: parseInt(index) + 1
                     };
                     await Store.updateOffer(id, data);
                 }
 
+                window.offerPhotos = {}; // Reset local tracker
                 Notify.success("Ofertas y configuraci\u00f3n actualizadas.");
+                renderOffersAdmin(); // Re-render to show updated previews/status
             } catch (err) {
                 console.error(err);
                 Notify.error("Error al guardar las ofertas.");

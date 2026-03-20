@@ -63,7 +63,7 @@
   <div class="orb orb-3"></div>
 
   <div class="hero-content">
-    <div class="hero-tag">Reparto y Retiro — Nueva Imperial</div>
+    <div class="hero-tag">Reparto — Nueva Imperial</div>
     <h1 class="hero-h1">
       <span class="it-on">On</span><span class="it-lypi">lyPi</span><span class="it-zza">zza</span>
     </h1>
@@ -106,6 +106,12 @@
   <div class="pizza-grid">
     <!-- Pizzas rendered dynamically via JS -->
   </div>
+
+  <div id="view-all-container" class="view-all-container" style="display:none">
+    <button id="view-all-btn" class="view-all-btn">
+      Ver todo nuestro menú <span style="margin-left:0.5rem">→</span>
+    </button>
+  </div>
 </section>
 
 <!-- OFFERS -->
@@ -126,23 +132,31 @@
   <div class="steps-grid">
     <div class="step">
       <div class="step-num">01</div>
-      <div class="step-title">Elige tus pizzas</div>
-      <div class="step-desc">Explora nuestro menú y añade tus favoritas al carrito. Combina los sabores que prefieras para armar tu pedido.</div>
+      <div class="step-content">
+        <div class="step-title">Elige tus pizzas</div>
+        <div class="step-desc">Explora nuestro menú y añade tus favoritas al carrito. Combina los sabores que prefieras para armar tu pedido.</div>
+      </div>
     </div>
     <div class="step">
       <div class="step-num">02</div>
-      <div class="step-title">Completa tus datos</div>
-      <div class="step-desc">Abre el carrito, ingresa tu nombre, tipo de entrega y medio de pago. Todo es rápido, digital y sin complicaciones.</div>
+      <div class="step-content">
+        <div class="step-title">Completa tus datos</div>
+        <div class="step-desc">Abre el carrito, ingresa tu nombre, dirección y medio de pago. Todo es rápido, digital y sin complicaciones.</div>
+      </div>
     </div>
     <div class="step">
       <div class="step-num">03</div>
-      <div class="step-title">Envía por WhatsApp</div>
-      <div class="step-desc">Al confirmar, el sistema generará tu pedido y lo enviará automáticamente a nuestro WhatsApp para comenzar la preparación.</div>
+      <div class="step-content">
+        <div class="step-title">Envía por WhatsApp</div>
+        <div class="step-desc">Al confirmar, el sistema generará tu pedido y lo enviará automáticamente a nuestro WhatsApp para comenzar la preparación.</div>
+      </div>
     </div>
     <div class="step">
       <div class="step-num">04</div>
-      <div class="step-title">Sigue y disfruta</div>
-      <div class="step-desc">Recibirás un link para monitorear el estado de tu pizza en tiempo real (Radar) hasta que esté lista para disfrutar.</div>
+      <div class="step-content">
+        <div class="step-title">Sigue y disfruta</div>
+        <div class="step-desc">Recibirás un link para monitorear el estado de tu pizza en tiempo real (Radar) hasta que esté lista para disfrutar.</div>
+      </div>
     </div>
   </div>
 </section>
@@ -174,11 +188,11 @@
         <div class="chat-time">20:14</div>
       </div>
       <div class="chat-bubble" style="background:#0d2b1a">
-        ¡Hola! 🍕 Perfecto. ¿Es para delivery o retiro?
+        ¡Hola! 🍕 Perfecto, tomamos tu pedido.
         <div class="chat-time">20:14</div>
       </div>
       <div class="chat-bubble">
-        Delivery. Calle Los Aromos 543
+        Calle Los Aromos 543
         <div class="chat-time">20:15</div>
       </div>
       <div class="chat-bubble" style="background:#0d2b1a">
@@ -200,7 +214,7 @@
   </a>
   <div class="footer-info">
     Nueva Imperial, Araucanía<br>
-    REPARTO Y RETIRO<br>
+    REPARTO<br>
     12:00 — 23:00 HRS
   </div>
   <!-- MOBILE FLOATING CART -->
@@ -235,14 +249,6 @@
           <input type="text" id="om-name" placeholder="EJ: JUAN PÉREZ" autocomplete="off">
         </div>
 
-        <!-- Tipo de entrega -->
-        <div class="om-field">
-          <label>Tipo de entrega</label>
-          <div class="om-toggle-group">
-            <button type="button" class="om-toggle active" data-val="Despacho" id="om-btn-despacho">🛵 Despacho</button>
-            <button type="button" class="om-toggle" data-val="Retiro" id="om-btn-retiro">🏠 Retiro en local</button>
-          </div>
-        </div>
 
         <!-- Dirección (solo despacho) -->
         <div class="om-field" id="om-address-group">
@@ -263,7 +269,7 @@
         <!-- Observaciones -->
         <div class="om-field">
           <label for="om-notes">Observaciones / Notas (opcional)</label>
-          <textarea id="om-notes" placeholder="EJ: SIN AJÍ, EXTRA QUESO, TOCAR EL TIMBRE FUERTE..." style="width:100%; background:#000; border:1px solid rgba(206,43,55,0.2); color:#fff; padding:0.8rem; font-family:var(--font-mono); font-size:0.9rem; margin-top:0.5rem; resize:vertical; min-height:80px;"></textarea>
+          <textarea id="om-notes" placeholder="EJ: SIN SALSA BBQ, SIN CEBOLLA, SIN CHAMPIÑONES..." style="width:100%; background:#000; border:1px solid rgba(206,43,55,0.2); color:#fff; padding:0.8rem; font-family:var(--font-mono); font-size:0.9rem; margin-top:0.5rem; resize:vertical; min-height:80px;"></textarea>
         </div>
 
         <!-- Botón confirmar -->

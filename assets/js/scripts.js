@@ -4,12 +4,17 @@ import { Store } from './data-manager.js';
 const WA_NUMBER = '56943892208'; // +56 9 4389 2208
 
 let pizzas = [];
-let cart = [];
+let cart = JSON.parse(localStorage.getItem('only_pizza_cart') || '[]');
 
-async function renderMenu(filter = 'Todas') {
+function saveCart() {
+  localStorage.setItem('only_pizza_cart', JSON.stringify(cart));
+}
+
+async function renderMenu(filter = 'Todas', limit = null) {
   const grid = document.querySelector('.pizza-grid');
   if (!grid) return;
-  grid.innerHTML = '<div class="loading-spinner">Cargando menú...</div>';
+  
+  if (!limit) grid.innerHTML = '<div class="loading-spinner">Cargando menú...</div>';
 
   try {
     pizzas = await Store.getPizzas();
@@ -20,11 +25,13 @@ async function renderMenu(filter = 'Todas') {
       return;
     }
 
-    const filteredPizzas = filter === 'Todas' 
+    const filteredTotal = filter === 'Todas' 
       ? pizzas 
       : pizzas.filter(p => p.category === filter);
 
-    filteredPizzas.forEach((pizza) => {
+    const pizzasToRender = limit ? filteredTotal.slice(0, limit) : filteredTotal;
+
+    pizzasToRender.forEach((pizza) => {
       const card = document.createElement('div');
       card.className = 'pizza-card';
       const count = cart.filter(p => p.id === pizza.id).length;
@@ -58,10 +65,24 @@ async function renderMenu(filter = 'Todas') {
         removeFromCart(this.dataset.id);
       });
 
-      if (typeof observer !== 'undefined') {
-        observer.observe(card);
+      if (window.observer) {
+        window.observer.observe(card);
       }
     });
+
+    // Update "View All" button visibility
+    const viewAllBox = document.getElementById('view-all-container');
+    const viewAllBtn = document.getElementById('view-all-btn');
+    
+    if (viewAllBox && viewAllBtn) {
+      if (limit && filteredTotal.length > limit) {
+        viewAllBox.style.display = 'flex';
+        viewAllBtn.onclick = () => { window.location.href = 'menu.html'; };
+      } else {
+        viewAllBox.style.display = 'none';
+      }
+    }
+
   } catch (err) {
     console.error("Error rendering menu:", err);
     grid.innerHTML = '<div style="color:var(--it-red)">ERROR CARGANDO EL MENÚ</div>';
@@ -73,6 +94,7 @@ function addToCart(id) {
   if (!pizza) return;
 
   cart.push(pizza);
+  saveCart();
   updateCartUI();
 }
 
@@ -80,6 +102,7 @@ function removeFromCart(id) {
   const index = cart.findLastIndex(p => p.id === id);
   if (index !== -1) {
     cart.splice(index, 1);
+    saveCart();
     updateCartUI();
   }
 }
@@ -128,6 +151,12 @@ function updateCartUI() {
     if (count > 0) ctrl.classList.add('active');
     else ctrl.classList.remove('active');
   });
+
+  // Refresh modal if active
+  const omOverlay = document.getElementById('order-modal');
+  if (omOverlay && omOverlay.classList.contains('active')) {
+    window.renderModalSummary && window.renderModalSummary();
+  }
 }
 
 
@@ -186,26 +215,28 @@ async function renderOffers() {
 
     section.style.display = 'block';
     const offers = await Store.getOffers();
+    const activeOffers = offers.filter(off => off.active !== false);
     
-    container.innerHTML = offers.map(off => `
-      <div class="offer-card ${off.featured ? 'featured' : ''}" style="${off.fullWidth ? 'grid-column: span 2;' : ''}">
-        ${off.fullWidth ? `
-          <div style="display:flex; gap:2rem; align-items:center">
-            <div>
+    container.innerHTML = activeOffers.map(off => `
+      <div class="offer-card ${off.featured ? 'featured' : ''} ${off.fullWidth ? 'full-width-layout' : ''}" 
+           style="${off.fullWidth ? 'grid-column: span 2;' : ''} ${off.image ? `background-image: url('${off.image}')` : ''}">
+        <div class="offer-content">
+          ${off.fullWidth ? `
+            <div style="display:flex; flex-direction:column; gap:0.5rem; flex:1;">
               <div class="offer-discount" style="font-size:3rem">${off.discount.replace('\n', '<br>')}</div>
               <div class="offer-title">${off.title}</div>
               <div class="offer-desc">${off.desc}</div>
               <div class="offer-tag">${off.tag}</div>
             </div>
-            <div style="font-size:5rem; opacity:0.3">🍕</div>
-          </div>
-        ` : `
-          <div class="offer-discount" style="${off.discount.length > 3 ? 'font-size:3.5rem' : ''}">${off.discount}</div>
-          <div class="offer-title">${off.title}</div>
-          <div class="offer-desc">${off.desc}</div>
-          <div class="offer-tag">${off.tag}</div>
-          ${off.featured ? '<div class="offer-glow"></div>' : ''}
-        `}
+            <div style="font-size:5rem; opacity:0.3" class="full-width-icon">🍕</div>
+          ` : `
+            <div class="offer-discount" style="${off.discount.length > 3 ? 'font-size:3.5rem' : ''}">${off.discount}</div>
+            <div class="offer-title">${off.title}</div>
+            <div class="offer-desc">${off.desc}</div>
+            <div class="offer-tag">${off.tag}</div>
+            ${off.featured ? '<div class="offer-glow"></div>' : ''}
+          `}
+        </div>
       </div>
     `).join('');
 
@@ -245,12 +276,16 @@ document.addEventListener('DOMContentLoaded', () => {
     observer.observe(el);
   });
 
+  renderOffers();
+
+  const getInitialLimit = () => window.innerWidth < 900 ? 4 : 6;
+
   // Filter buttons
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      renderMenu(btn.textContent);
+      renderMenu(btn.textContent, getInitialLimit());
     });
   });
 
@@ -263,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (heroVisual) heroVisual.style.transform = `translateY(calc(-50% + ${scrollY * 0.15}px))`;
   });
 
-  renderMenu();
+  renderMenu('Todas', getInitialLimit());
   renderOffers();
 
   // Mobile menu toggle
@@ -306,20 +341,41 @@ document.addEventListener('DOMContentLoaded', () => {
   let omDeliveryType = 'Despacho';
   let omPayment = 'Transferencia';
 
-  function openOrderModal() {
-    if (cart.length === 0) return;
+  function renderModalSummary() {
+    if (cart.length === 0) {
+      closeOrderModal();
+      return;
+    }
 
-    // Populate cart summary
     const grouped = cart.reduce((acc, item) => {
-      acc[item.name] = (acc[item.name] || 0) + 1;
+      if (!acc[item.name]) {
+        acc[item.name] = { qty: 0, id: item.id, price: item.price };
+      }
+      acc[item.name].qty++;
       return acc;
     }, {});
     const total = cart.reduce((sum, item) => sum + item.price, 0);
 
-    omCartSummary.innerHTML = Object.entries(grouped).map(([name, qty]) => {
-      const unitPrice = cart.find(p => p.name === name)?.price || 0;
-      return `<div class="om-summary-line"><span>${qty}x ${name}</span><span>$${(unitPrice * qty).toLocaleString('es-CL')}</span></div>`;
+    omCartSummary.innerHTML = Object.entries(grouped).map(([name, data]) => {
+      return `
+        <div class="om-summary-line">
+          <div style="display:flex; align-items:center;">
+             <div class="om-qty-actions">
+               <button class="om-qty-btn modal-minus" data-id="${data.id}">-</button>
+               <span class="om-qty-num">${data.qty}</span>
+               <button class="om-qty-btn modal-plus" data-id="${data.id}">+</button>
+             </div>
+             <span>${name}</span>
+          </div>
+          <span>$${(data.price * data.qty).toLocaleString('es-CL')}</span>
+        </div>`;
     }).join('') + `<div class="om-summary-line total"><span>TOTAL</span><span>$${total.toLocaleString('es-CL')} CLP</span></div>`;
+  }
+
+  function openOrderModal() {
+    if (cart.length === 0) return;
+
+    renderModalSummary();
 
     // Reset fields
     omNameInput.value = '';
@@ -348,18 +404,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn) btn.classList.add('active');
   }
 
-  // Delivery type toggles
-  omOverlay.querySelectorAll('.om-toggle-group:not(.om-pay-group) .om-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      omDeliveryType = btn.dataset.val;
-      setActiveToggle(btn, '.om-toggle-group:not(.om-pay-group) .om-toggle');
-      if (omDeliveryType === 'Retiro') {
-        omAddressGroup.classList.add('hidden');
-      } else {
-        omAddressGroup.classList.remove('hidden');
-      }
-    });
-  });
 
   // Payment toggles
   omOverlay.querySelectorAll('.om-pay-group .om-toggle').forEach(btn => {
@@ -373,6 +417,15 @@ document.addEventListener('DOMContentLoaded', () => {
   omCloseBtn.addEventListener('click', closeOrderModal);
   omOverlay.addEventListener('click', (e) => { if (e.target === omOverlay) closeOrderModal(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOrderModal(); });
+
+  // Modal quantity delegation
+  omCartSummary.addEventListener('click', (e) => {
+    const btn = e.target.closest('.om-qty-btn');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (btn.classList.contains('modal-plus')) addToCart(id);
+    else if (btn.classList.contains('modal-minus')) removeFromCart(id);
+  });
 
   // Confirm: build link and open WhatsApp
   omConfirmBtn.addEventListener('click', async () => {
@@ -416,6 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (link !== '#') {
         // Clear cart and close modal
         cart = [];
+        saveCart();
         updateCartUI();
         closeOrderModal();
         window.location.href = link;
@@ -431,6 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Expose for other parts of the code
   window.openOrderModal = openOrderModal;
+  window.renderModalSummary = renderModalSummary;
   // ── /ORDER MODAL LOGIC ─────────────────────────────────────────────────────
 });
 
