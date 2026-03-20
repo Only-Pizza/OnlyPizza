@@ -171,7 +171,7 @@ function generateWhatsAppLink(orderData = {}) {
   const { name = '', deliveryType = 'Despacho', address = '', payment = 'Transferencia', notes = '' } = orderData;
 
   const pizza = String.fromCodePoint(0x1F355);
-  const user = String.fromCodePoint(0x1F464);
+  const userIcon = String.fromCodePoint(0x1F464);
   const money = String.fromCodePoint(0x1F4B0);
   const truck = String.fromCodePoint(0x1F69A);
   const pin = String.fromCodePoint(0x1F4CD);
@@ -179,13 +179,12 @@ function generateWhatsAppLink(orderData = {}) {
   const notesIcon = String.fromCodePoint(0x1F4DD);
   const pray = String.fromCodePoint(0x1F64F);
 
-  // Use classic concatenation to avoid any emoji mangling in template strings
   let message = "\u00A1Hola! Quiero realizar un pedido " + pizza + "\n";
-  if (name) message += user + " *" + name.toUpperCase() + "*\n";
+  if (name) message += userIcon + " *" + name.toUpperCase() + "*\n";
   message += "\n";
 
   for (const [pizzaName, qty] of Object.entries(grouped)) {
-    message += "\u2022 " + qty + "x " + pizzaName + "\n";
+    message += "\u2022 " + qty + "x " + pizzaName.toUpperCase() + "\n";
   }
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
@@ -193,8 +192,8 @@ function generateWhatsAppLink(orderData = {}) {
   message += "\n" + truck + " *Entrega: " + deliveryType + "*";
   if (deliveryType === 'Despacho' && address) message += "\n" + pin + " *Direcci\u00f3n: " + address + "*";
   message += "\n" + card + " *Pago: " + payment + "*";
-  if (notes) message += "\n\n" + notesIcon + " *Notas: " + notes + "*\n";
-  message += "\n\u00bfMe confirman el tiempo de entrega? " + pray;
+  if (notes) message += "\n\n" + notesIcon + " *Notas: " + notes + "*";
+  message += "\n\n\u00bfMe confirman el tiempo de entrega? " + pray;
 
   return "https://wa.me/" + WA_NUMBER + "?text=" + encodeURIComponent(message);
 }

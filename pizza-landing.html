@@ -182,26 +182,40 @@
     <div class="wa-glow"></div>
     <div class="phone-mockup">
       <div class="phone-notch"></div>
-      <div style="font-family:var(--font-mono);font-size:0.6rem;color:#25D366;margin-bottom:0.8rem;letter-spacing:0.1em">ONLY PIZZA · WhatsApp</div>
-      <div class="chat-bubble">
-        Hola! Quiero pedir una pizza Pepperoni grande 🍕
-        <div class="chat-time">20:14</div>
+      <div style="font-family:var(--font-mono);font-size:0.6rem;color:#25ed6e;margin:0 0 0.8rem 0.5rem;letter-spacing:0.1em;display:flex;align-items:center;gap:0.5rem;">
+        <i class="fab fa-whatsapp" style="font-size:0.9rem"></i> ONLY PIZZA · WhatsApp
       </div>
-      <div class="chat-bubble" style="background:#0d2b1a">
-        ¡Hola! 🍕 Perfecto, tomamos tu pedido.
-        <div class="chat-time">20:14</div>
-      </div>
-      <div class="chat-bubble">
-        Calle Los Aromos 543
-        <div class="chat-time">20:15</div>
-      </div>
-      <div class="chat-bubble" style="background:#0d2b1a">
-        ✅ Pedido confirmado.<br>Pepperoni Grande — $8.990<br>Tiempo estimado: 25 min
-        <div class="chat-time">20:15</div>
-      </div>
-      <div class="chat-bubble" style="background:#0d2b1a; margin-top:0.5rem; border-left:2px solid #25D366">
-        🔥 Tu pizza está en el horno...
-        <div class="chat-time">20:28</div>
+      
+      <div class="chat-container">
+        <!-- Message 1: Customer Order (Screenshot 1 Style) -->
+        <div class="chat-bubble out">
+          <div class="chat-text">¡Hola! Quiero realizar un pedido 🍕</div>
+          <div class="chat-header">
+            <span style="font-size:1.1rem">👤</span> <strong>TOM CRUISE</strong>
+          </div>
+          <ul class="chat-list">
+            <li>1x PIZZA AL TARTUFO E PROSCIUTTO</li>
+            <li>1x PIZZA MARGARITA</li>
+          </ul>
+          <div class="chat-detail">💰 <b>Total:</b> $29.000 CLP</div>
+          <div class="chat-detail">🚚 <b>Entrega:</b> Despacho</div>
+          <div class="chat-detail">📍 <b>Dirección:</b> Hollywood Blvd 777</div>
+          <div class="chat-detail">💳 <b>Pago:</b> Débito/Crédito</div>
+          <div class="chat-detail" style="margin-top:0.8rem">📝 <b>Notas:</b> Sin salsa BBQ</div>
+          <div class="chat-text" style="margin-top:0.8rem">¿Me confirman el tiempo de entrega? 🙏</div>
+          <div class="chat-meta">
+            13:51 <span class="chat-check">✓✓</span>
+          </div>
+        </div>
+
+        <!-- Message 2: Store Response (Automatic) -->
+        <div class="chat-bubble in" style="animation-delay: 1.5s; opacity: 0; animation: bubbleIn 0.5s 1.5s forwards;">
+          <div class="chat-text">¡Hola Tom! 🍕 Tu pedido <b>#1024</b> ha sido aceptado y ya está en preparación.</div>
+          <div class="chat-detail" style="margin: 0.5rem 0">• <b>Tiempo estimado:</b> 35-45 min</div>
+          <div class="chat-text">Sigue tu pedido en vivo aquí:</div>
+          <div class="chat-text" style="color:#00a5f4; text-decoration:underline; font-size:0.75rem">only-pizza.cl/radar/1024</div>
+          <div class="chat-meta">13:52</div>
+        </div>
       </div>
     </div>
   </div>

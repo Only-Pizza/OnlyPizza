@@ -778,37 +778,89 @@
   }
 
   .phone-mockup {
-    width: 260px;
-    background: var(--panel);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 30px;
-    padding: 1.5rem 1rem;
+    width: 280px;
+    background: #0b141a; /* WhatsApp Dark Mode Background */
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 35px;
+    padding: 2.5rem 0.8rem 1.5rem;
     position: relative;
-    box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 40px rgba(37,211,102,0.05);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+    overflow: hidden;
   }
   .phone-notch {
-    width: 80px; height: 8px;
-    background: #111; border-radius: 4px;
-    margin: 0 auto 1.5rem;
+    width: 60px; height: 18px;
+    background: #000; border-radius: 0 0 12px 12px;
+    position: absolute; top: 0; left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+  .chat-container {
+    display: flex; flex-direction: column; gap: 0.5rem;
+    background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Classic WhatsApp pattern */
+    background-size: contain;
+    padding: 1rem 0.5rem;
+    border-radius: 20px;
+    min-height: 380px;
   }
   .chat-bubble {
-    background: #1a3d26; border-radius: 12px 12px 12px 2px;
-    padding: 0.8rem 1rem; margin-bottom: 0.5rem;
-    font-size: 0.75rem; color: #fff; line-height: 1.5;
-    font-family: var(--font-body);
-    animation: bubbleIn 0.3s ease-out;
+    max-width: 85%;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    position: relative;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
   }
+  /* Outgoing (Customer) */
   .chat-bubble.out {
-    background: #0a1f15; border-radius: 12px 12px 2px 12px;
-    margin-left: auto; text-align: right;
-    color: #25D366;
+    background: #d9fdd3;
+    color: #111b21;
+    align-self: flex-end;
+    border-radius: 8px 0 8px 8px;
+    margin-left: auto;
+    text-align: left;
   }
-  .chat-time { font-family: var(--font-mono); font-size: 0.5rem; color: var(--muted); margin-top: 0.2rem; }
+  .chat-bubble.out::after {
+    content: ''; position: absolute; top: 0; right: -8px;
+    width: 0; height: 0;
+    border-left: 10px solid #d9fdd3;
+    border-bottom: 10px solid transparent;
+  }
+  /* Incoming (Store) */
+  .chat-bubble.in {
+    background: #ffffff;
+    color: #111b21;
+    align-self: flex-start;
+    border-radius: 0 8px 8px 8px;
+  }
+  .chat-bubble.in::after {
+    content: ''; position: absolute; top: 0; left: -8px;
+    width: 0; height: 0;
+    border-right: 10px solid #ffffff;
+    border-bottom: 10px solid transparent;
+  }
+
+  .chat-header { font-weight: 700; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.4rem; }
+  .chat-list { margin: 0.5rem 0; padding-left: 0.8rem; list-style: none; }
+  .chat-list li { margin-bottom: 0.2rem; position: relative; }
+  .chat-list li::before { content: '•'; position: absolute; left: -0.8rem; color: rgba(0,0,0,0.5); }
+  
+  .chat-detail { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.3rem; }
+  .chat-detail b { font-weight: 700; }
+
+  .chat-meta {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 0.2rem; margin-top: 0.2rem;
+    font-size: 0.6rem; color: #667781;
+    font-family: var(--font-mono);
+  }
+  .chat-bubble.out .chat-meta { color: #667781; }
+  .chat-check { color: #53bdeb; font-size: 0.7rem; }
 
   .wa-glow {
-    position: absolute; width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(37,211,102,0.1), transparent 70%);
-    filter: blur(40px); z-index: -1;
+    position: absolute; width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(37,211,102,0.15), transparent 70%);
+    filter: blur(50px); z-index: -1;
   }
 
   /* FOOTER */
@@ -845,10 +897,10 @@
   ::-webkit-scrollbar-track { background: var(--void); }
   ::-webkit-scrollbar-thumb { background: var(--it-green); }
 
-  /* Scan line effect */
-  @keyframes scan {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100vh); }
+  /* Animations */
+  @keyframes bubbleIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
   /* Mobile */
