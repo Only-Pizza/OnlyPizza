@@ -429,7 +429,7 @@
   .pizza-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5px;
+    gap: 2.5rem;
   }
 
   .pizza-card {
@@ -558,7 +558,7 @@
   .offers-grid {
     display: grid; grid-template-columns: 2fr 1fr 1fr;
     grid-template-rows: auto auto;
-    gap: 1.5px; margin-top: 3rem;
+    gap: 2rem; margin-top: 3rem;
   }
 
   .offer-card {
@@ -618,7 +618,7 @@
 
   .steps-grid {
     display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 2px; margin-top: 4rem;
+    gap: 2rem; margin-top: 4rem;
     position: relative;
   }
   .steps-grid::before {
@@ -828,7 +828,7 @@
       margin-left: -1.5rem;
       padding: 0 1.5rem 10px;
     }
-    .offers-grid { display: flex; flex-direction: column; gap: 1.5rem; }
+    .offers-grid { display: flex; flex-direction: column; gap: 2rem; }
     .offer-card { padding: 2rem 1.5rem; width: 100%; }
     .offer-card.featured { grid-row: auto; }
     .steps-grid { grid-template-columns: 1fr 1fr; }
